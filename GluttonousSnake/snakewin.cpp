@@ -5,7 +5,10 @@ SnakeWin::SnakeWin(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::SnakeWin)
 {
+    //初始化ui
     ui->setupUi(this);
+
+    //类内成员初始化
     this->headRect = QRectF(this->width()/2-32,this->height()/2-32,32,32);//保存蛇头的位置
     qDebug()<<this->headRect;
     this->timerPainter= new QTimer(); //初始化绘画定时器
@@ -13,12 +16,18 @@ SnakeWin::SnakeWin(QWidget *parent)
     this->dire = QString("Left");//初始化初始方向为向左
     this->imgInit();//初始化图片
     this->snakeInit();//初始化蛇
-    this->speed = 20;
+    this->controlOpt = "letterKey"; //初始化控制方式为字母键
+
+    //信号连接槽函数
     QObject::connect(this->timerPainter,SIGNAL(timeout()),this,SLOT(timeOutPaint())); //连接定时器信号和自定义槽函数
     QObject::connect(this->timerPos,SIGNAL(timeout()),this,SLOT(timeOutPos()));
-    timerPainter->setInterval(50); //设置定时器的触发间隔为50微秒
+
+    //设置绘画定时器
+    timerPainter->setInterval(100); //设置定时器的触发间隔为0.1秒
     timerPainter->start();//开启定时器
-    timerPos->setInterval(100);//设置定时器的触发间隔为1秒
+
+    //设置移动定时器
+    timerPos->setInterval(100);//设置定时器的触发间隔为0.1秒
     timerPos->start();//开启定时器
 }
 
@@ -26,27 +35,25 @@ SnakeWin::~SnakeWin()
 {
     delete ui;
 }
+
 //初始化载入图片
 void SnakeWin::imgInit(void){
     this->snaBodyNode = QImage(":/img/body.png");
-    this->snaHead = QImage(":/img/head.png");
 }
 
 //初始化蛇体
 void SnakeWin::snakeInit(void){
-    QRectF rect(this->headRect.x()+32,this->headRect.y(),this->size,this->size);
-    addBody(rect);
-    qDebug()<<rect;
-    for(int i = 0;i<8;i++){
-           rect.setX(rect.x()+32);
+    QRectF rect(this->headRect.x(),this->headRect.y(),this->size,this->size);
+    for(int i = 0;i<3;i++){
+           addBody(rect);
+           rect.setX(rect.x());
            rect.setY(rect.y());
            rect.setWidth(32);
            rect.setHeight(32);
-           addBody(rect);
            qDebug()<<rect;
     }
 }
-//添加身体
+//变长
 void SnakeWin::addBody(QRectF rect,int num){
     if(num>0){
         for(int i = num;i>0;i--){
@@ -64,143 +71,98 @@ void SnakeWin::timeOutPaint(){
 //移动蛇定时器槽函数
 void SnakeWin::timeOutPos(void){
 //    qDebug()<< dire;
-    move(this->speed,this->dire);
+    move(this->dire);
 }
 //画图事件
 void SnakeWin::paintEvent(QPaintEvent*){
     QPainter painter(this);
-    painter.drawImage(this->headRect,this->snaHead);
+//    painter.drawImage(this->headRect,this->snaHead);
     for(int i = 0;i<this->snake.size();i++){
         painter.drawImage(this->snake[i],this->snaBodyNode);
     }
 
 }
+
 //键盘按下事件
 void SnakeWin::keyPressEvent(QKeyEvent* event){
-    qDebug()<<"keyPress";
-//    if(event->key() == Qt::Key_Left){
-//        this->dire = "Left";
-//    }
-//    if(event->key() == Qt::Key_Right){
-//        this->dire = "Right";
-//    }
-//    if(event->key() == Qt::Key_Up){
-//        this->dire = "Up";
-//    }
-//    if(event->key() == Qt::Key_Down){
-//        this->dire = "Down";
-//    }
 
-    if(event->key() == Qt::Key_A){
-        if(this->dire != "Left" && this->dire != "Right"){
-            QMatrix matrix;
-            matrix.rotate(90.0);
-            this->snaHead = this->snaHead.transformed(matrix,Qt::FastTransformation);
-            this->dire = "Left";
+//    qDebug()<<"keyPress";
+
+    //使用WASD键控制
+    if(this->controlOpt == "letterKey"){
+        if(event->key() == Qt::Key_A){                //监听A键
+            if(this->dire != "Left" && this->dire != "Right"){
+                this->dire = "Left";
+            }
+        }
+        if(event->key() == Qt::Key_D){              //监听D键
+            if(this->dire != "Left" && this->dire != "Right"){
+                this->dire = "Right";
+            }
+        }
+        if(event->key() == Qt::Key_W){              //监听W键
+            if(this->dire != "Up" && this->dire != "Down"){
+                this->dire = "Up";
+            }
+        }
+        if(event->key() == Qt::Key_S){              //监听S键
+            if(this->dire != "Down" && this->dire != "Up"){
+                this->dire = "Down";
+            }
         }
     }
-    if(event->key() == Qt::Key_D){
-        if(this->dire != "Left" && this->dire != "Right"){
-            QMatrix matrix;
-            matrix.rotate(90.0);
-            this->snaHead = this->snaHead.transformed(matrix,Qt::FastTransformation);
-            this->dire = "Right";
+
+
+    //使用方向键控制
+    if(this->controlOpt == "direKey"){
+        if(event->key() == Qt::Key_Left){                //监听左键
+            if(this->dire != "Left" && this->dire != "Right"){
+                this->dire = "Left";
+            }
         }
-    }
-    if(event->key() == Qt::Key_W){
-        if(this->dire != "Up" && this->dire != "Down"){
-            QMatrix matrix;
-            matrix.rotate(90.0);
-            this->snaHead = this->snaHead.transformed(matrix,Qt::FastTransformation);
-            this->dire = "Up";
+        if(event->key() == Qt::Key_Right){              //监听右键
+            if(this->dire != "Left" && this->dire != "Right"){
+                this->dire = "Right";
+            }
         }
-    }
-    if(event->key() == Qt::Key_S){
-        if(this->dire != "Down" && this->dire != "Up"){
-            QMatrix matrix;
-            matrix.rotate(90.0);
-            this->snaHead = this->snaHead.transformed(matrix,Qt::FastTransformation);
-            this->dire = "Down";
+        if(event->key() == Qt::Key_Up){              //监听上键
+            if(this->dire != "Up" && this->dire != "Down"){
+                this->dire = "Up";
+            }
+        }
+        if(event->key() == Qt::Key_Down){              //监听下键
+            if(this->dire != "Down" && this->dire != "Up"){
+                this->dire = "Down";
+            }
         }
     }
 
 }
 
-//改变头朝向
-//void SnakeWin::changeOrientation(){
-
-//}
-
 //移动
-void SnakeWin::move(int speed,QString dire){
-    if(QString::compare(dire,"Left") == 0){  //向左移动
-        this->headRect.setX(this->headRect.x()-speed); //移动头
-        this->headRect.setWidth(32);
-        this->headRect.setHeight(32);
-        if(this->snake.size()){
-            this->snake[0].setX(this->headRect.x()+speed);
-            this->snake[0].setY(this->headRect.y());
-            this->snake[0].setWidth(32);
-            this->snake[0].setHeight(32);
-            for(int i = 1;i<this->snake.size();i++){ //移动身体
-                this->snake[i].setX(this->snake[i-1].x());
-                this->snake[i].setY(this->snake[i-1].y());
-                this->snake[i].setWidth(32);
-                this->snake[i].setHeight(32);
-            }
-        }
-
+void SnakeWin::move(QString dire){
+    if(dire == "Left"){
+            QRectF node = QRectF(this->headRect.x()-this->size,this->headRect.y(),this->size,this->size);
+            this->snake.insert(0,node);
+            this->headRect = node;
+            this->snake.pop_back();
     }
-    if(QString::compare(dire,"Right") == 0){  //向右移动
-        this->headRect.setX(this->headRect.x()+speed); //移动头
-        this->headRect.setWidth(32);
-        this->headRect.setHeight(32);
-        if(this->snake.size()){
-            this->snake[0].setX(this->headRect.x()-speed);
-            this->snake[0].setY(this->headRect.y());
-            this->snake[0].setWidth(32);
-            this->snake[0].setHeight(32);
-            for(int i = 1;i<this->snake.size();i++){ //移动身体
-                this->snake[i].setX(this->snake[i-1].x());
-                this->snake[i].setY(this->snake[i-1].y());
-                this->snake[i].setWidth(32);
-                this->snake[i].setHeight(32);
-            }
-        }
+    if(dire == "Right"){
+            QRectF node = QRectF(this->headRect.x()+this->size,this->headRect.y(),this->size,this->size);
+            this->snake.insert(0,node);
+            this->headRect = node;
+            this->snake.pop_back();
     }
-    if(QString::compare(dire,"Up") == 0){  //向上移动
-        this->headRect.setY(this->headRect.y()-speed); //移动头
-        this->headRect.setWidth(32);
-        this->headRect.setHeight(32);
-        if(this->snake.size()){
-            this->snake[0].setX(this->headRect.x());
-            this->snake[0].setY(this->headRect.y()+speed);
-            this->snake[0].setWidth(32);
-            this->snake[0].setHeight(32);
-            for(int i = 1;i<this->snake.size();i++){ //移动身体
-                this->snake[i].setX(this->snake[i-1].x());
-                this->snake[i].setY(this->snake[i-1].y());
-                this->snake[i].setWidth(32);
-                this->snake[i].setHeight(32);
-            }
-        }
+    if(dire == "Up"){
+            QRectF node = QRectF(this->headRect.x(),this->headRect.y()-this->size,this->size,this->size);
+            this->snake.insert(0,node);
+            this->headRect = node;
+            this->snake.pop_back();
     }
-    if(QString::compare(dire,"Down") == 0){  //向下移动
-        this->headRect.setY(this->headRect.y()+speed); //移动头
-        this->headRect.setWidth(32);
-        this->headRect.setHeight(32);
-        if(this->snake.size()){
-            this->snake[0].setX(this->headRect.x());
-            this->snake[0].setY(this->headRect.y()-speed);
-            this->snake[0].setWidth(32);
-            this->snake[0].setHeight(32);
-            for(int i = 1;i<this->snake.size();i++){ //移动身体
-                this->snake[i].setX(this->snake[i-1].x());
-                this->snake[i].setY(this->snake[i-1].y());
-                this->snake[i].setWidth(32);
-                this->snake[i].setHeight(32);
-            }
-        }
-
+    if(dire == "Down"){
+            QRectF node = QRectF(this->headRect.x(),this->headRect.y()+this->size,this->size,this->size);
+            this->snake.insert(0,node);
+            this->headRect = node;
+            this->snake.pop_back();
     }
 }
