@@ -28,7 +28,7 @@ SnakeWin::SnakeWin(QWidget *parent)     //初始化列表
     QObject::connect(this->timerFoever,SIGNAL(timeout()),this,SLOT(timeOut())); //连接定时器信号和自定义槽函数
 
     //设置全局定时器
-    timerFoever->setInterval(50); //设置定时器的触发间隔为0.1秒
+    timerFoever->setInterval(100); //设置定时器的触发间隔为0.05秒
     timerFoever->start();//开启定时器
 
     //设置绘画定时器
@@ -89,11 +89,12 @@ void SnakeWin::timeOutPos(void){
     move(this->dire);
 }
 
+//全局定时器
 void SnakeWin::timeOut(){
     if(this->food == nullptr){
         createNFood(nullptr);
     }
-    qDebug()<<this->food;
+    this->gameOver();
 
 }
 //画图事件
@@ -263,5 +264,22 @@ void SnakeWin::createNFood(QWidget *parent){
         this->liveNumbers++;
         qDebug()<<this->liveNumbers;
         qDebug()<<food->rect;
+    }
+}
+void SnakeWin::gameOver(){
+    qDebug()<<"head"<<this->snake.front();
+    qDebug()<<"rail"<<this->snake.back();
+    if(this->snake.front().x() == this->snake.back().x() &&
+            this->snake.front().y() == this->snake.back().y() && this->snake.size()>1){
+        this->timerPainter->stop();
+        this->timerPos->stop();
+        this->timerFoever->stop();
+        QMessageBox msgBox;
+        msgBox.setText("GAME OVER!");
+        msgBox.exec();
+        if (msgBox.clickedButton())
+            {
+                this->close();
+            }
     }
 }

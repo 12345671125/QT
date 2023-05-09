@@ -8,6 +8,7 @@
 #include <QDebug>       //控制台输出
 #include <QTimer>       //计时器类
 #include <QKeyEvent>    //键盘事件类
+#include <QMessageBox> //消息盒子
 #include "foods.h"
 
 QT_BEGIN_NAMESPACE
@@ -51,5 +52,6 @@ private:
     void resizeEvent(QResizeEvent *event); //窗口变化事件
     void capture(); //碰撞检测捕获食物
     void createNFood(QWidget *parent); // 生成食物
+    void gameOver(); //游戏结束
 };
 #endif // SNAKEWIN_H
