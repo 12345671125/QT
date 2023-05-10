@@ -14,8 +14,8 @@ public:
     QImage img; //存放食物图片
     QRectF rect; //用来存放food的位置和大小
     bool isLive; //是否存活
+    int size;
     void refreshPRect(int ParentX,int ParentY,int ParentW,int ParentH); //用来更新父窗口的变化
-
     ~foods();
 
 public slots:
@@ -23,7 +23,7 @@ public slots:
 
 private:
     QTimer* timer; //food食物定时器
-    int size;
+
     QRectF PRect; //用来存放父窗口的位置和大小
 
     void refresh(); //当定时器触发并且当前food存活，用来刷新当前food的位置，防止吃不到

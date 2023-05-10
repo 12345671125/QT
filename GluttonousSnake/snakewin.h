@@ -10,6 +10,7 @@
 #include <QKeyEvent>    //键盘事件类
 #include <QMessageBox> //消息盒子
 #include "foods.h"
+#include <math.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class SnakeWin; }

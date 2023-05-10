@@ -79,19 +79,19 @@ void SnakeWin::addBody(QRectF rect,int num){
 
 //画图定时器槽函数
 void SnakeWin::timeOutPaint(){
-    update();
+    update();  //触发绘画事件
 //    qDebug()<<"update";
 }
 
 //移动蛇定时器槽函数
 void SnakeWin::timeOutPos(void){
 //    qDebug()<< dire;
-    move(this->dire);
+    move(this->dire); //触发移动事件
 }
 
 //全局定时器
 void SnakeWin::timeOut(){
-    if(this->food == nullptr){
+    if(this->food == nullptr){          //防御性编程
         createNFood(nullptr);
     }
     this->gameOver();
@@ -99,12 +99,12 @@ void SnakeWin::timeOut(){
 }
 //画图事件
 void SnakeWin::paintEvent(QPaintEvent*){
-    QPainter painter(this);
+    QPainter painter(this); //创建画家对象
 //    painter.drawImage(this->headRect,this->snaHead);
-    for(int i = 0;i<this->snake.size();i++){
+    for(int i = 0;i<this->snake.size();i++){                 //循环绘制蛇身
         painter.drawImage(this->snake[i],this->snaBodyNode);
     }
-    if(this->food != nullptr){
+    if(this->food != nullptr){                       //防御性编程
         painter.drawImage(this->food->rect,this->food->img);
     }
 
@@ -178,11 +178,11 @@ void SnakeWin::keyPressEvent(QKeyEvent* event){
 
 }
 
-//移动
+//移动->采取每次添加头结点，删除尾结点的方式来达到移动效果
 void SnakeWin::move(QString dire){
     capture();
     if(dire == "Left"){
-        if(this->headRect.x()>0){
+        if(this->headRect.x()>0){     //实现穿墙
             QRectF node = QRectF(this->headRect.x()-this->size,this->headRect.y(),this->size,this->size);
             this->snake.insert(0,node);
             this->headRect = node;
@@ -196,7 +196,7 @@ void SnakeWin::move(QString dire){
 
     }
     if(dire == "Right"){
-        if(this->headRect.x()<this->width()){
+        if(this->headRect.x()<this->width()){ //实现穿墙
             QRectF node = QRectF(this->headRect.x()+this->size,this->headRect.y(),this->size,this->size);
             this->snake.insert(0,node);
             this->headRect = node;
@@ -210,7 +210,7 @@ void SnakeWin::move(QString dire){
 
     }
     if(dire == "Up"){
-        if(this->headRect.y()>0){
+        if(this->headRect.y()>0){ //实现穿墙
             QRectF node = QRectF(this->headRect.x(),this->headRect.y()-this->size,this->size,this->size);
             this->snake.insert(0,node);
             this->headRect = node;
@@ -223,7 +223,7 @@ void SnakeWin::move(QString dire){
         }
     }
     if(dire == "Down"){
-        if(this->headRect.y()<this->liveRect.height()){
+        if(this->headRect.y()<this->liveRect.height()){ //实现穿墙
             QRectF node = QRectF(this->headRect.x(),this->headRect.y()+this->size,this->size,this->size);
             this->snake.insert(0,node);
             this->headRect = node;
@@ -241,28 +241,28 @@ void SnakeWin::move(QString dire){
 void SnakeWin::capture(){
 //    qDebug()<<"头位置"<<this->headRect;
 //    qDebug()<<"食物位置"<<this->food->rect;
-    QPoint Point1(headRect.x(),headRect.y());
-    QPoint Point2(headRect.x()+this->size,headRect.y()+this->size);
-    QPoint Point3(this->food->rect.x(),this->food->rect.y());
-    if(Point1.x()<=Point3.x() && Point3.x()<=Point2.x() && Point1.y() <= Point3.y() && Point3.y() <= Point2.y()){
-           this->food->isLive = false;
-            this->food->~foods();
-            this->food = nullptr;
-            this->liveNumbers--;
-            qDebug()<<this->liveNumbers;
+    QPoint pointHead = QPoint(this->headRect.x()+this->size/2,this->headRect.y()+this->size/2); //获取蛇头的中心位置
+    QPoint pointFood = QPoint(this->food->rect.x()+this->food->size/2,this->food->rect.y()+this->food->size/2);//获取食物的中心位置
+    int distance =  sqrt(pow((pointFood.x()-pointHead.x()),2)+pow((pointFood.y()-pointHead.y()),2)); //计算两点之间的距离
+    if(distance < (this->size +this->food->size)){   //如果两点之间的距离小于两者的半径和
+           this->food->isLive = false; //将食物的是否存活标为false
+            this->food->~foods();   //显式调用food的析构函数，摧毁food
+            this->food = nullptr; //防御性编程，将food成员标为null防止野指针
+            this->liveNumbers--; //将存活的food的数量减一
+//            qDebug()<<this->liveNumbers;
         QRectF rect = QRectF(this->snake.back().x(),this->snake.back().y(),this->snake.back().width()
                            ,this->snake.back().height());
-            this->addBody(rect);
+            this->addBody(rect);  //添加身体
     }
 
 }
 
 //生成新的食物
 void SnakeWin::createNFood(QWidget *parent){
-    if(this->liveNumbers < 1){
-        this->food = new foods(parent,this->liveRect.x(),this->liveRect.y(),this->liveRect.width(),this->liveRect.height());
+    if(this->liveNumbers < 1){   //防御性编程，如果存活的食物数量<1
+        this->food = new foods(parent,this->liveRect.x(),this->liveRect.y(),this->liveRect.width(),this->liveRect.height());//生成新的食物对象
         this->liveNumbers++;
-        qDebug()<<this->liveNumbers;
+//        qDebug()<<this->liveNumbers;
         qDebug()<<food->rect;
     }
 }
@@ -270,7 +270,7 @@ void SnakeWin::gameOver(){
     qDebug()<<"head"<<this->snake.front();
     qDebug()<<"rail"<<this->snake.back();
     if(this->snake.front().x() == this->snake.back().x() &&
-            this->snake.front().y() == this->snake.back().y() && this->snake.size()>1){
+            this->snake.front().y() == this->snake.back().y() && this->snake.size()>1){  //如果头的坐标==尾的坐标，游戏结束
         this->timerPainter->stop();
         this->timerPos->stop();
         this->timerFoever->stop();
