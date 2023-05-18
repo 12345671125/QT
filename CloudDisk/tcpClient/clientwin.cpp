@@ -7,8 +7,11 @@ clientWin::clientWin(QWidget *parent)
 {
     ui->setupUi(this);
     initconfig(); //初始化配置
+    connectToServer();
+    QObject::connect(&this->clientSocket,SIGNAL(connected()),this,SLOT(showConnected()));
 }
 
+//从配置文件中获取服务器ip和port
 void clientWin::initconfig()
 {
     QFile file(":/config");  //定义File对象 用来读取文件
@@ -29,6 +32,16 @@ void clientWin::initconfig()
     }else{
         QMessageBox::critical(this,"open config","open config fault!");
     }
+}
+
+
+//连接服务器
+void clientWin::connectToServer(){
+    this->clientSocket.connectToHost(QHostAddress(this->ip),this->port);  //连接服务器
+}
+
+void clientWin::showConnected(){
+    QMessageBox::information(this,"connectToSercer","sucess!");
 }
 
 clientWin::~clientWin()

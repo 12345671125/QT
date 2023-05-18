@@ -1,0 +1,33 @@
+#ifndef SERVERWIN_H
+#define SERVERWIN_H
+
+#include <QMainWindow>
+#include <QDebug>
+#include <QTcpSocket>
+#include <QSqlDatabase>
+#include <QMessageBox>
+#include <QFile>
+#include "mytcpserver.h"
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class serverWin; }
+QT_END_NAMESPACE
+
+class serverWin : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    serverWin(QWidget *parent = nullptr);
+    ~serverWin();
+
+private:
+    Ui::serverWin *ui;
+    QString ip;
+    quint16 port;
+    QTcpSocket serverSocket;
+
+    void configInit(); //初始化配置文件
+    void createServer(); //创建服务器
+};
+#endif // SERVERWIN_H
