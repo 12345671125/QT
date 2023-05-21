@@ -7,6 +7,11 @@
 #include <QFile> //文件类用于静态读取文件
 #include <QMessageBox>
 #include <QHostAddress>
+#include "protocol.h"
+
+#define _file_ 1
+#define _msgText_ 0
+#define _other_ 2
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class clientWin; }
@@ -22,6 +27,9 @@ public:
     ~clientWin();
 public slots:
     void showConnected();
+private slots:
+    void on_sendButton_clicked();
+
 private:
     Ui::clientWin *ui;
     QString ip;//用于存放服务器ip

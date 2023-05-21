@@ -18,10 +18,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mytcpserver.cpp \
+    mytcpsocket.cpp \
+    protocol.cpp \
     serverwin.cpp
 
 HEADERS += \
     mytcpserver.h \
+    mytcpsocket.h \
+    protocol.h \
     serverwin.h
 
 FORMS += \

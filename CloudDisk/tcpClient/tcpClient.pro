@@ -17,10 +17,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
-    clientwin.cpp
+    clientwin.cpp \
+    protocol.cpp
 
 HEADERS += \
-    clientwin.h
+    clientwin.h \
+    protocol.h
 
 FORMS += \
     clientwin.ui

@@ -41,7 +41,7 @@ void clientWin::connectToServer(){
 }
 
 void clientWin::showConnected(){
-    QMessageBox::information(this,"connectToSercer","sucess!");
+    QMessageBox::information(this,"connectToSercer","连接服务器成功!");
 }
 
 clientWin::~clientWin()
@@ -49,3 +49,18 @@ clientWin::~clientWin()
     delete ui;
 }
 
+
+void clientWin::on_sendButton_clicked()
+{
+    QString strMsg = this->ui->msgInput->text();
+    if(!strMsg.isEmpty()){
+            PDU *pdu = createPDU(strMsg.size()+1);
+            pdu->uiMsgType = _msgText_;
+            memcpy(pdu->caMsg,strMsg.toStdString().c_str(),strMsg.size());
+            this->clientSocket.write((char*) pdu, pdu->uiPDULen);
+            free(pdu);
+            pdu = nullptr;
+    }else{
+        QMessageBox::warning(this,"send Message","发送的信息不能为空!");
+    }
+}
