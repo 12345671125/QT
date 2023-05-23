@@ -8,10 +8,11 @@
 #include <QMessageBox>
 #include <QHostAddress>
 #include "protocol.h"
+#include <QCryptographicHash> //qt内置加密库
 
-#define _file_ 1
-#define _msgText_ 0
-#define _other_ 2
+//#define _file_ 1
+//#define _msgText_ 0
+//#define _other_ 2
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class clientWin; }
@@ -28,7 +29,13 @@ public:
 public slots:
     void showConnected();
 private slots:
-    void on_sendButton_clicked();
+//    void on_sendButton_clicked();
+
+    void on_login_clicked();
+
+    void on_regist_clicked();
+
+    void on_logout_clicked();
 
 private:
     Ui::clientWin *ui;

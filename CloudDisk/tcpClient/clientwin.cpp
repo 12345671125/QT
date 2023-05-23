@@ -49,18 +49,50 @@ clientWin::~clientWin()
     delete ui;
 }
 
+//#if 0
+//void clientWin::on_sendButton_clicked()
+//{
+//    QString strMsg = this->ui->msgInput->text();
+//    if(!strMsg.isEmpty()){
+//            PDU *pdu = createPDU(strMsg.size()+1);
+//            pdu->uiMsgType = _msgText_;
+//            memcpy(pdu->caMsg,strMsg.toStdString().c_str(),strMsg.size());
+//            this->clientSocket.write((char*) pdu, pdu->uiPDULen);
+//            free(pdu);
+//            pdu = nullptr;
+//    }else{
+//        QMessageBox::warning(this,"send Message","发送的信息不能为空!");
+//    }
+//}
+//#endif
 
-void clientWin::on_sendButton_clicked()
+void clientWin::on_login_clicked()
 {
-    QString strMsg = this->ui->msgInput->text();
-    if(!strMsg.isEmpty()){
-            PDU *pdu = createPDU(strMsg.size()+1);
-            pdu->uiMsgType = _msgText_;
-            memcpy(pdu->caMsg,strMsg.toStdString().c_str(),strMsg.size());
-            this->clientSocket.write((char*) pdu, pdu->uiPDULen);
-            free(pdu);
-            pdu = nullptr;
+
+}
+
+void clientWin::on_regist_clicked()
+{
+    if(!this->ui->usernameInput->text().isEmpty() && !this->ui->passwordInput->text().isEmpty()){
+        QString username = this->ui->usernameInput->text();
+        QString password = this->ui->passwordInput->text();
+        QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5);
+        password = bytePwdMd5.toHex();
+        qDebug()<<password;
+        PDU* pdu = createPDU(0);
+        pdu->uiMsgType = ENUM_MSG_TYPE_REGIST_REQUEST;
+        strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
+        strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
+        this->clientSocket.write((char*)pdu, pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
     }else{
-        QMessageBox::warning(this,"send Message","发送的信息不能为空!");
+        QMessageBox::critical(this,"ERROR","用户名或密码不能为空!");
     }
+
+}
+
+void clientWin::on_logout_clicked()
+{
+
 }

@@ -13,3 +13,4 @@ PDU *createPDU(uint uiMsgLen)
     pdu->uiMsgLen = uiMsgLen;
     return pdu;
 }
+
