@@ -13,4 +13,13 @@ PDU *createPDU(uint uiMsgLen)
     pdu->uiMsgLen = uiMsgLen;
     return pdu;
 }
+PDU PDU::default_respond(uint Type,QString respondStr) //一个默认的回复模板
+{
+    PDU instance;
+    instance.uiPDULen = sizeof(PDU);
+    instance.uiMsgLen = 0;
+    instance.uiMsgType = Type;
+    memcpy(instance.caData,respondStr.toStdString().c_str(),respondStr.length()+1);
+    return instance;
+}
 

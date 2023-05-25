@@ -18,14 +18,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     clientwin.cpp \
+    online.cpp \
+    opewidget.cpp \
     protocol.cpp
 
 HEADERS += \
     clientwin.h \
+    online.h \
+    opewidget.h \
     protocol.h
 
 FORMS += \
-    clientwin.ui
+    clientwin.ui \
+    online.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

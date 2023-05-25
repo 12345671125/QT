@@ -28,6 +28,7 @@ public:
     ~clientWin();
 public slots:
     void showConnected();
+    void recvMsg();
 private slots:
 //    void on_sendButton_clicked();
 

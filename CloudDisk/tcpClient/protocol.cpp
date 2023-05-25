@@ -14,12 +14,12 @@ PDU *createPDU(uint uiMsgLen)
     return pdu;
 }
 
-PDU PDU::default_respond(QString respondStr) //一个默认的回复模板
+PDU PDU::default_respond(uint Type,QString respondStr) //一个默认的回复模板
 {
     PDU instance;
     instance.uiPDULen = sizeof(PDU);
     instance.uiMsgLen = 0;
-    instance.uiMsgType = ENUM_MSG_TYPE_REGIST_RESPOND;
+    instance.uiMsgType = Type;
     memcpy(instance.caData,respondStr.toStdString().c_str(),respondStr.length());
     return instance;
 }

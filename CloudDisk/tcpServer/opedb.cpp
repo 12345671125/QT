@@ -24,6 +24,37 @@ bool OpeDB::handleRegit(const char *name, const char *pwd)
 
 }
 
+bool OpeDB::handleLogin(const char *name, const char *pwd)
+{
+    if(name == nullptr || pwd == nullptr ){   //当name 或 pwd 为NULL时
+        return false;
+    }
+    QString sqlString = QString("select * from userInfo where name = \'%1\' and pwd = \'%2\' and  online = 0").arg(name).arg(pwd);
+//    qDebug()<<sqlString;
+    QSqlQuery query;
+    query.exec(sqlString);
+    if(query.next()){
+        QString sqlString = QString("update userInfo set online = 1 where name = \'%1\' and pwd = \'%2\'").arg(name).arg(pwd);
+        QSqlQuery query;
+        query.exec(sqlString);
+        return true;
+    }else{
+        return false;
+    }
+}
+
+void OpeDB::handleOffline(const char *name)
+{
+    if(name == nullptr){   //当name 或 pwd 为NULL时
+        return;
+    }
+    QString queryStr = QString("update userInfo set online = 0 where name = \'%1\'").arg(name);
+    qDebug()<<queryStr;
+    QSqlQuery query;
+    query.exec(queryStr);
+
+}
+
 OpeDB::~OpeDB()
 {
     this->m_db.close();

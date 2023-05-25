@@ -12,6 +12,8 @@ public:
 
     static myTcpServer& getInstance(); //单例模式
     void incomingConnection(qintptr handle);
+public slots:
+    void deleteSocket(myTcpSocket* mySocket);
 private:
     QList<myTcpSocket*> socketList; //模板类，socketList中的每一个元素时一个myTcpSocket类的实例化对象的指针
 };

@@ -9,6 +9,7 @@ clientWin::clientWin(QWidget *parent)
     initconfig(); //初始化配置
     connectToServer();
     QObject::connect(&this->clientSocket,SIGNAL(connected()),this,SLOT(showConnected()));
+    QObject::connect(&this->clientSocket,SIGNAL(readyRead()),this,SLOT(recvMsg()));
 }
 
 //从配置文件中获取服务器ip和port
@@ -44,6 +45,43 @@ void clientWin::showConnected(){
     QMessageBox::information(this,"connectToSercer","连接服务器成功!");
 }
 
+void clientWin::recvMsg()
+{
+    uint uiPDULen = 0;
+    this->clientSocket.read((char*)&uiPDULen,sizeof(uint)); //para1:数据存放的地址，para2:读出的数据大小，读出uint字节的大小，这个uint为总的数据大小
+    uint uiMsgLen = uiPDULen - sizeof(PDU); //用总的数据大小减去PDU结构体的默认，获取实际消息长度
+    PDU* pdu = createPDU(uiMsgLen); //创建协议结构体，用于接收数据
+    this->clientSocket.read((char*)pdu + sizeof (uint),uiPDULen-sizeof (uint)); /*让指针偏移来读取剩下的数据大小,先将pdu的指针类型转换为了char类型的指针，
+那么当指针指针加一的时候会向后偏移一个字节的大小*/
+    switch (pdu->uiMsgType)
+    {
+        case ENUM_MSG_TYPE_REGIST_RESPOND:
+    {
+        qDebug() << pdu->caData;
+        if(strcmp(pdu->caData,REGIST_OK) == 0){
+            QMessageBox::information(this,"注册","注册成功");
+        }else if(strcmp(pdu->caData,REGIST_FAILED) == 0){
+            qDebug() << 1;
+            QMessageBox::warning(this,"注册","注册失败，用户名重复");
+        }
+        break;
+    }
+        case ENUM_MSG_TYPE_LOGIN_RESPOND:
+    {
+        qDebug() << pdu->caData;
+        if(strcmp(pdu->caData,LOGIN_OK) == 0){
+            QMessageBox::information(this,"登录","LOGIN_OK");
+        }else if(strcmp(pdu->caData,LOGIN_FAILED) == 0){
+            qDebug() << 1;
+            QMessageBox::warning(this,"登录","用户名或密码错误");
+        }
+        break;
+    }
+
+        default: break;
+    }
+}
+
 clientWin::~clientWin()
 {
     delete ui;
@@ -68,7 +106,22 @@ clientWin::~clientWin()
 
 void clientWin::on_login_clicked()
 {
-
+    if(!this->ui->usernameInput->text().isEmpty() && !this->ui->passwordInput->text().isEmpty()){
+        QString username = this->ui->usernameInput->text();
+        QString password = this->ui->passwordInput->text();
+        QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
+        password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
+//        qDebug()<<password;
+        PDU* pdu = createPDU(0);
+        pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
+        strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
+        strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
+        this->clientSocket.write((char*)pdu, pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }else{
+        QMessageBox::critical(this,"ERROR","用户名或密码不能为空!");
+    }
 }
 
 void clientWin::on_regist_clicked()
@@ -76,9 +129,9 @@ void clientWin::on_regist_clicked()
     if(!this->ui->usernameInput->text().isEmpty() && !this->ui->passwordInput->text().isEmpty()){
         QString username = this->ui->usernameInput->text();
         QString password = this->ui->passwordInput->text();
-        QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5);
-        password = bytePwdMd5.toHex();
-        qDebug()<<password;
+        QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
+        password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
+//        qDebug()<<password;
         PDU* pdu = createPDU(0);
         pdu->uiMsgType = ENUM_MSG_TYPE_REGIST_REQUEST;
         strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
