@@ -1,4 +1,8 @@
+/*opedb类负责与数据库进行通信*/
+
+
 #include "opedb.h"
+
 
 OpeDB::OpeDB(QObject *parent) : QObject(parent)
 {
@@ -53,6 +57,20 @@ void OpeDB::handleOffline(const char *name)
     QSqlQuery query;
     query.exec(queryStr);
 
+}
+
+QStringList OpeDB::handleAllOnline()
+{
+    QString queryStr = QString("select name from userInfo where online=1");
+    qDebug()<<queryStr;
+    QSqlQuery query;
+    query.exec(queryStr);
+    QStringList result;
+    result.clear();
+    while(query.next()){
+        result.append(query.value(0).toString());
+    }
+    return result;
 }
 
 OpeDB::~OpeDB()

@@ -1,4 +1,8 @@
+/*好友界面类*/
+
 #include "friend.h"
+#include "protocol.h"
+#include "clientwin.h"
 
 Friend::Friend(QWidget *parent) : QWidget(parent)
 {
@@ -41,10 +45,20 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     QObject::connect(m_pShowOnlineUserPB,SIGNAL(clicked(bool)),this,SLOT(showOnline()));
 }
 
+void Friend::showAllOnlineUser(PDU* pdu)
+{
+    if(pdu == NULL) return;
+    this->online->showUser(pdu);
+
+}
+
 void Friend::showOnline()
 {
-    if(online -> isHidden())
+    if(online -> isHidden()){
          online->show();
+         PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ALL_ONLINE_REQUEST,"在线用户请求");
+         clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+    }
     else
         online->hide();
 }

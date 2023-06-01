@@ -1,3 +1,6 @@
+/*myTcpServer类用于生成tcpServer并且监听并接受新的客户端请求*/
+
+
 #ifndef MYTCPSERVER_H
 #define MYTCPSERVER_H
 
@@ -15,7 +18,7 @@ public:
 public slots:
     void deleteSocket(myTcpSocket* mySocket);
 private:
-    QList<myTcpSocket*> socketList; //模板类，socketList中的每一个元素时一个myTcpSocket类的实例化对象的指针
+    QList<myTcpSocket*> socketList; //模板类，socketList中的每一个元素时一个myTcpSocket类的实例化对象的指针,每一个myTcpSocket对应一个客户端
 };
 
 #endif // MYTCPSERVER_H

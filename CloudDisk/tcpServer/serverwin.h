@@ -1,3 +1,5 @@
+/*主界面类，用于初始化程序配置*/
+
 #ifndef SERVERWIN_H
 #define SERVERWIN_H
 

@@ -1,3 +1,5 @@
+/*主界面类，用于初始化程序配置*/
+
 #include "serverwin.h"
 #include "ui_serverwin.h"
 
@@ -32,7 +34,7 @@ void serverWin::configInit(){
         }
 }
 
-void serverWin::createServer()
+void serverWin::createServer()  //初始化tcp服务器
 {
     if(myTcpServer::getInstance().listen(QHostAddress(this->ip),this->port))
     {

@@ -1,3 +1,6 @@
+/*主界面类，用于客户端初始化*/
+
+
 #ifndef CLIENTWIN_H
 #define CLIENTWIN_H
 
@@ -9,6 +12,7 @@
 #include <QHostAddress>
 #include "protocol.h"
 #include <QCryptographicHash> //qt内置加密库
+#include "opewidget.h"
 
 //#define _file_ 1
 //#define _msgText_ 0
@@ -24,6 +28,8 @@ class clientWin : public QMainWindow
 
 public:
     clientWin(QWidget *parent = nullptr);
+    static clientWin& getInstance();
+    QTcpSocket& getTcpSocket();
 
     ~clientWin();
 public slots:

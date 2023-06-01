@@ -1,3 +1,5 @@
+/*myTcpServer类用于生成tcpServer并且监听并接受新的客户端请求*/
+
 #include "mytcpserver.h"
 
 

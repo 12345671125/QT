@@ -1,3 +1,5 @@
+/*主界面类，用于客户端初始化*/
+
 #include "clientwin.h"
 #include "ui_clientwin.h"
 
@@ -10,6 +12,17 @@ clientWin::clientWin(QWidget *parent)
     connectToServer();
     QObject::connect(&this->clientSocket,SIGNAL(connected()),this,SLOT(showConnected()));
     QObject::connect(&this->clientSocket,SIGNAL(readyRead()),this,SLOT(recvMsg()));
+}
+
+clientWin &clientWin::getInstance()
+{
+    static clientWin instance;
+    return instance;
+}
+
+QTcpSocket &clientWin::getTcpSocket()
+{
+    return this->clientSocket;
 }
 
 //从配置文件中获取服务器ip和port
@@ -71,10 +84,18 @@ void clientWin::recvMsg()
         qDebug() << pdu->caData;
         if(strcmp(pdu->caData,LOGIN_OK) == 0){
             QMessageBox::information(this,"登录","LOGIN_OK");
+            OpeWidget::getinstance().show();
+            this->hide();
         }else if(strcmp(pdu->caData,LOGIN_FAILED) == 0){
             qDebug() << 1;
             QMessageBox::warning(this,"登录","用户名或密码错误");
         }
+        break;
+    }
+        case ENUM_MSG_TYPE_ALL_ONLINE_RESPOND:
+    {
+
+        OpeWidget::getinstance().getFriend()->showAllOnlineUser(pdu);
         break;
     }
 

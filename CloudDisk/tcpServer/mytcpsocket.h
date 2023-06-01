@@ -1,3 +1,5 @@
+/*myTcpSocket类用于处理并响应客户端的请求*/
+
 #ifndef MYTCPSOCKET_H
 #define MYTCPSOCKET_H
 
@@ -18,6 +20,8 @@ public slots:
     void clientOffine();
 //    void respond(PDU* pdu); //用于回复
     void login(PDU* pdu);
+
+    void showOnline(PDU* pdu);
 //    void logout();
 signals:
     void offline(myTcpSocket* mySocket);
