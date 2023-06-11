@@ -16,7 +16,7 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     this->m_pSearchUserPB = new QPushButton("查询用户");
     this->m_pMsgSendPB = new QPushButton("信息发送");
     this->m_pPrivateChatPB = new QPushButton("私聊");
-
+    this->m_pSearchUserPB->setDisabled(true);
     QVBoxLayout *pLeftBL = new QVBoxLayout;
     pLeftBL->addWidget(m_pDelFriendPB);
     pLeftBL->addWidget(m_pFlushFriendPB);
@@ -43,6 +43,7 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     setLayout(pMain);
 
     QObject::connect(m_pShowOnlineUserPB,SIGNAL(clicked(bool)),this,SLOT(showOnline()));
+    QObject::connect(m_pSearchUserPB,SIGNAL(clicked(bool)),this,SLOT(searchUser()));
 }
 
 void Friend::showAllOnlineUser(PDU* pdu)
@@ -52,13 +53,31 @@ void Friend::showAllOnlineUser(PDU* pdu)
 
 }
 
+void Friend::showSearchUser(PDU *pdu)
+{
+    if(pdu == NULL) return;
+    this->online->showSearchUser(pdu);
+}
+
 void Friend::showOnline()
 {
+    this->m_pSearchUserPB->setDisabled(false);
     if(online -> isHidden()){
          online->show();
          PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ALL_ONLINE_REQUEST,"在线用户请求");
          clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
     }
     else
-        online->hide();
+         online->hide();
+}
+
+void Friend::searchUser()
+{
+    QString userName  = QInputDialog::getText(this,"搜索","用户名:");
+    if(!userName.isEmpty())
+    {
+//         qDebug() << userName;
+         PDU  pdu = PDU::default_request(ENUM_MSG_TYPE_SEARCHUSER_REQUEST,userName.toStdString().c_str());
+         clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+    }
 }

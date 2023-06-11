@@ -98,6 +98,10 @@ void clientWin::recvMsg()
         OpeWidget::getinstance().getFriend()->showAllOnlineUser(pdu);
         break;
     }
+        case ENUM_MSG_TYPE_SEARCHUSER_RESPOND:
+    {
+        OpeWidget::getinstance().getFriend()->showSearchUser(pdu);
+    }
 
         default: break;
     }

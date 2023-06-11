@@ -21,6 +21,7 @@ public:
     bool handleRegit(const char* name, const char* pwd); //用于处理注册
     bool handleLogin(const char *name, const char *pwd); //用于处理登录
     void handleOffline(const char *name);
+    QStringList handleSearchUser(const char *userName);
     QStringList handleAllOnline(); //用于显示所有用户
     ~OpeDB();
 signals:

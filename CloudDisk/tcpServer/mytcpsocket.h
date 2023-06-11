@@ -22,6 +22,8 @@ public slots:
     void login(PDU* pdu);
 
     void showOnline(PDU* pdu);
+
+    void searchUser(PDU* pdu);
 //    void logout();
 signals:
     void offline(myTcpSocket* mySocket);

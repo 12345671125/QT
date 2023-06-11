@@ -59,6 +59,21 @@ void OpeDB::handleOffline(const char *name)
 
 }
 
+QStringList OpeDB::handleSearchUser(const char *userName)
+{
+
+    QString queryStr = QString("select name,online from userInfo where name like \'%1%\'").arg(userName);
+    qDebug()<<queryStr;
+    QSqlQuery query;
+    query.exec(queryStr);
+    QStringList result;
+    result.clear();
+    while(query.next()){
+        result.append(query.value(0).toString()+":"+query.value(1).toString());
+    }
+    return result;
+}
+
 QStringList OpeDB::handleAllOnline()
 {
     QString queryStr = QString("select name from userInfo where online=1");

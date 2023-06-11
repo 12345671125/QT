@@ -35,6 +35,9 @@ void myTcpSocket::recvMsg()
         this->showOnline(pdu); //处理显示在线用户
         break;
 
+        case ENUM_MSG_TYPE_SEARCHUSER_REQUEST:
+        this->searchUser(pdu);
+        break;
         default: break;
     }
 }
@@ -102,4 +105,19 @@ void myTcpSocket::showOnline(PDU* pdu)
     write((char*)respdu,respdu->uiPDULen);//将协议内容写入套接字
     free(respdu); //释放缓存区
     respdu = NULL;//防止野指针
+}
+
+void myTcpSocket::searchUser(PDU *pdu)
+{
+    QStringList ret = OpeDB::getInsance().handleSearchUser(pdu->caData);
+    uint uiMsgLen = ret.size()*(32+1+1);
+    qDebug()<<uiMsgLen;
+    PDU* respdu = createPDU(uiMsgLen);
+    respdu->uiMsgType = ENUM_MSG_TYPE_SEARCHUSER_RESPOND;
+    for(int i = 0;i<ret.size();i++){
+        memcpy((char*)respdu->caMsg+i*(32+1+1),ret.at(i).toStdString().c_str(),34);
+    }
+    write((char*)respdu,respdu->uiPDULen);
+    free(respdu);
+    respdu = NULL;
 }

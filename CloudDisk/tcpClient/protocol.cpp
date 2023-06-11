@@ -13,7 +13,7 @@ PDU *createPDU(uint uiMsgLen)
     memset(pdu,0,uiPDULen); //初始化协议
 
     pdu->uiPDULen = uiPDULen; //将协议总长写入协议
-    pdu->uiMsgLen = uiMsgLen;//将数据总长写入协议
+    pdu->uiMsgLen = uiMsgLen;//将数据总长写入协议4
     return pdu;
 }
 PDU PDU::default_request(uint Type,QString requestStr,uint MsgSize) //一个默认的请求模板，用于发送文字提示类请求

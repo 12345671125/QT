@@ -18,6 +18,7 @@ public:
     explicit Online(QWidget *parent = nullptr);
     ~Online();
     void showUser(PDU* pdu);
+    void showSearchUser(PDU* pdu);
 
 private:
     Ui::Online *ui;

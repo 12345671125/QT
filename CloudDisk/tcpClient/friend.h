@@ -13,6 +13,8 @@
 #include <QHBoxLayout>
 #include "online.h"
 #include "protocol.h"
+#include <QInputDialog>
+#include <QDebug>
 
 class Friend : public QWidget
 {
@@ -20,10 +22,12 @@ class Friend : public QWidget
 public:
     explicit Friend(QWidget *parent = nullptr);
     void showAllOnlineUser(PDU* pdu);
+    void showSearchUser(PDU* pdu);
 
 signals:
 public slots:
-    void showOnline();
+    void showOnline();//显示在线用户槽函数
+    void searchUser(); //查找用户槽函数
 private:
     QTextEdit* m_pShowMsgTE;
     QListWidget* m_pFriendListWidget;
