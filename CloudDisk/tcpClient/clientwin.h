@@ -30,7 +30,7 @@ public:
     clientWin(QWidget *parent = nullptr);
     static clientWin& getInstance();
     QTcpSocket& getTcpSocket();
-
+    QString getLoginName();
     ~clientWin();
 public slots:
     void showConnected();
@@ -49,6 +49,7 @@ private:
     QString ip;//用于存放服务器ip
     qint16 port; //用于存放服务器端口
     QTcpSocket clientSocket;//客户端socket对象
+    QString m_strLoginName;
     void initconfig(); //初始化服务器配置
     void connectToServer();
 };

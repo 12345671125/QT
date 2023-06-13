@@ -25,6 +25,13 @@ void myTcpServer::incomingConnection(qintptr handle)  /*当服务器端监听到
     QObject:: connect(socket,SIGNAL(offline(myTcpSocket*)),this,SLOT(deleteSocket(myTcpSocket*)));
 }
 
+void myTcpServer::resend(const char *pername, PDU *pdu)
+{
+    if(pername == NULL ||pdu == NULL){
+        return;
+    }
+}
+
 void myTcpServer::deleteSocket(myTcpSocket *mySocket)
 {
     QList<myTcpSocket*>::iterator iter = socketList.begin(); //创建迭代器

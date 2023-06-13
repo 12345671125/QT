@@ -25,6 +25,11 @@ QTcpSocket &clientWin::getTcpSocket()
     return this->clientSocket;
 }
 
+QString clientWin::getLoginName()
+{
+    return this->m_strLoginName;
+}
+
 //从配置文件中获取服务器ip和port
 void clientWin::initconfig()
 {
@@ -142,6 +147,7 @@ void clientWin::on_login_clicked()
         strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
         strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
         this->clientSocket.write((char*)pdu, pdu->uiPDULen);
+        this->m_strLoginName = username; //将用户名保存
         free(pdu);
         pdu = nullptr;
     }else{

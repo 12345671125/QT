@@ -5,6 +5,7 @@
 
 #include <QWidget>
 #include "protocol.h"
+#include "clientwin.h"
 
 namespace Ui {
 class Online;
@@ -19,6 +20,9 @@ public:
     ~Online();
     void showUser(PDU* pdu);
     void showSearchUser(PDU* pdu);
+
+private slots:
+    void on_addFriendButton_clicked();
 
 private:
     Ui::Online *ui;

@@ -38,6 +38,10 @@ void myTcpSocket::recvMsg()
         case ENUM_MSG_TYPE_SEARCHUSER_REQUEST:
         this->searchUser(pdu);
         break;
+
+
+        case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
+        this->addFriends(pdu);
         default: break;
     }
 }
@@ -110,14 +114,44 @@ void myTcpSocket::showOnline(PDU* pdu)
 void myTcpSocket::searchUser(PDU *pdu)
 {
     QStringList ret = OpeDB::getInsance().handleSearchUser(pdu->caData);
-    uint uiMsgLen = ret.size()*(32+1+1);
+    uint uiMsgLen = ret.size()*32;
     qDebug()<<uiMsgLen;
     PDU* respdu = createPDU(uiMsgLen);
     respdu->uiMsgType = ENUM_MSG_TYPE_SEARCHUSER_RESPOND;
     for(int i = 0;i<ret.size();i++){
-        memcpy((char*)respdu->caMsg+i*(32+1+1),ret.at(i).toStdString().c_str(),34);
+        memcpy((char*)respdu->caMsg+i*32,ret.at(i).toStdString().c_str(),ret.at(i).size());
     }
     write((char*)respdu,respdu->uiPDULen);
     free(respdu);
     respdu = NULL;
+}
+
+void myTcpSocket::addFriends(PDU *pdu)
+{
+    char pername[64] = {"\n"}; //创建password数组用于存放用户密码
+    char username[64] = {"\n"}; //创建username数组用于存放用户名
+    strncpy(username,pdu->caData,64);//从pdu.cadata中读取username
+    strncpy(pername,pdu->caData+64,64);//从pdu.cadata中读取pername
+    int ret = OpeDB::getInsance().handleAddFriend(pername,username);
+    if(ret == -1){
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"unkown error");
+        write((char*)&pdu,pdu.uiPDULen);
+    }else if(ret == 0){
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"friend existed");
+        write((char*)&pdu,pdu.uiPDULen);
+
+    }else if(ret == 1){
+        myTcpServer::getInstance().resend(pername,pdu);
+
+    }else if(ret ==2){
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user offine");
+        write((char*)&pdu,pdu.uiPDULen);
+
+    }else if(ret == 3){
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user not existed");
+        write((char*)&pdu,pdu.uiPDULen);
+
+    }
+
+
 }

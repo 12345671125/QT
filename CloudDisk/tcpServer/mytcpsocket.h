@@ -7,6 +7,7 @@
 #include <QDebug>
 #include "protocol.h"
 #include "opedb.h"
+#include"mytcpserver.h"
 
 class myTcpSocket : public QTcpSocket
 {
@@ -24,6 +25,8 @@ public slots:
     void showOnline(PDU* pdu);
 
     void searchUser(PDU* pdu);
+
+    void addFriends(PDU* pdu);
 //    void logout();
 signals:
     void offline(myTcpSocket* mySocket);

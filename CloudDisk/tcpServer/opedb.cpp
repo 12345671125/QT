@@ -62,14 +62,14 @@ void OpeDB::handleOffline(const char *name)
 QStringList OpeDB::handleSearchUser(const char *userName)
 {
 
-    QString queryStr = QString("select name,online from userInfo where name like \'%1%\'").arg(userName);
+    QString queryStr = QString("select name from userInfo where name like \'%%1%\'").arg(userName);
     qDebug()<<queryStr;
     QSqlQuery query;
     query.exec(queryStr);
     QStringList result;
     result.clear();
     while(query.next()){
-        result.append(query.value(0).toString()+":"+query.value(1).toString());
+        result.append(query.value(0).toString());
     }
     return result;
 }
@@ -86,6 +86,39 @@ QStringList OpeDB::handleAllOnline()
         result.append(query.value(0).toString());
     }
     return result;
+}
+
+int OpeDB::handleAddFriend(const char *pername, const char *name)
+{
+    if(pername == NULL || name == NULL){
+        return -1;
+    }
+    QString data = QString("select * from friend where (id = (select id from userInfo where name = \'%1\') and friendId = (select id from userInfo where name = \'%2\')) or (id = (select id from userInfo where name = \'%3\') and friendId = (select id from userInfo where name = \'%4\'))").arg(pername).arg(name).arg(name).arg(pername);
+    qDebug() << data;
+    QSqlQuery query;
+    query.exec(data);
+    if(query.next())
+    {
+        return 0; //双方已经是好友
+    }
+    else
+    {
+        data = QString("select online from userInfo where name = \'%1\'").arg(pername);
+        QSqlQuery query;
+        query.exec(data);
+        if(query.next()){
+            int ret = query.value(0).toInt();
+            if(ret == 1){
+                return 1;//在线
+            }
+            else if(ret == 0){
+                return 2;//不在线
+            }
+        }else{
+            return 3;//用户不存在
+        }
+
+    }
 }
 
 OpeDB::~OpeDB()

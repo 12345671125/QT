@@ -23,6 +23,7 @@ public:
     void handleOffline(const char *name);
     QStringList handleSearchUser(const char *userName);
     QStringList handleAllOnline(); //用于显示所有用户
+    int handleAddFriend(const char* pername,const char* name);
     ~OpeDB();
 signals:
 
