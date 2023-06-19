@@ -1,11 +1,11 @@
-#include "snakewin.h"
-
+//#include "snakewin.h"
+#include "startpage.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    SnakeWin w;
-    w.show();
+    StartPage page;
+    page.show();
     return a.exec();
 }

@@ -5,7 +5,7 @@
 
 myTcpServer::myTcpServer()
 {
-
+    this->socketList.clear();
 }
 
 myTcpServer &myTcpServer::getInstance()
@@ -27,8 +27,15 @@ void myTcpServer::incomingConnection(qintptr handle)  /*当服务器端监听到
 
 void myTcpServer::resend(const char *pername, PDU *pdu)
 {
-    if(pername == NULL ||pdu == NULL){
+    if(pername == NULL || pdu == NULL){
         return;
+    }
+    QString strName = pername;
+    for(int i = 0;i<this->socketList.length();i++){
+        if(this->socketList.at(i)->getName() == strName){
+            this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen); //通过登陆时传过来的username,将好友请求转发给对应用户
+            break;
+        }
     }
 }
 
@@ -43,7 +50,7 @@ void myTcpServer::deleteSocket(myTcpSocket *mySocket)
             break;
         }
     }
-    for(int i = 0;i<this->socketList.size();i++){
+    for(int i = 0;i<this->socketList.length();i++){
         qDebug() << socketList.at(i)->getName();
     }
 }

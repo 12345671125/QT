@@ -18,14 +18,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     foods.cpp \
     main.cpp \
-    snakewin.cpp
+    settingpage.cpp \
+    snakewin.cpp \
+    startpage.cpp
 
 HEADERS += \
     foods.h \
-    snakewin.h
+    settingpage.h \
+    snakewin.h \
+    startpage.h
 
 FORMS += \
-    snakewin.ui
+    settingpage.ui \
+    snakewin.ui \
+    startpage.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

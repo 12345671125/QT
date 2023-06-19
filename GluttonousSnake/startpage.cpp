@@ -1,5 +1,7 @@
 #include "startpage.h"
 #include "ui_startpage.h"
+#include "snakewin.h"
+#include "settingpage.h"
 
 StartPage::StartPage(QWidget *parent) :
     QDialog(parent),
@@ -11,4 +13,18 @@ StartPage::StartPage(QWidget *parent) :
 StartPage::~StartPage()
 {
     delete ui;
+}
+
+void StartPage::on_pushButton_clicked()
+{
+    SnakeWin *snake = new SnakeWin(nullptr);
+    snake->show();
+    this->close();
+
+}
+
+void StartPage::on_pushButton_2_clicked()
+{
+    SettingPage * setting = new SettingPage;
+    setting->show();
 }

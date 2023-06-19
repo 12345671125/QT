@@ -1,6 +1,7 @@
 /*myTcpSocket类用于处理并响应客户端的请求*/
 
 #include "mytcpsocket.h"
+#include"mytcpserver.h"
 
 myTcpSocket::myTcpSocket()
 {

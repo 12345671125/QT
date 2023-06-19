@@ -28,7 +28,7 @@ SnakeWin::SnakeWin(QWidget *parent)     //初始化列表
     QObject::connect(this->timerFoever,SIGNAL(timeout()),this,SLOT(timeOut())); //连接定时器信号和自定义槽函数
 
     //设置全局定时器
-    timerFoever->setInterval(100); //设置定时器的触发间隔为0.05秒
+    timerFoever->setInterval(100); //设置定时器的触发间隔为0.1秒
     timerFoever->start();//开启定时器
 
     //设置绘画定时器

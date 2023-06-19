@@ -2,7 +2,8 @@
 #define MYWIN_H
 
 #include <QMainWindow>
-
+#include <QKeyEvent>
+#include <QMouseEvent>
 QT_BEGIN_NAMESPACE
 namespace Ui { class myWin; }
 QT_END_NAMESPACE
@@ -17,5 +18,11 @@ public:
 
 private:
     Ui::myWin *ui;
+    bool m_drag;
+    QPoint m_pos;
+    void mousePressEvent(QMouseEvent* );
+    void mouseReleaseEvent(QMouseEvent* );
+    void mouseMoveEvent(QMouseEvent* );
+    void keyPressEvent(QKeyEvent* event);
 };
 #endif // MYWIN_H

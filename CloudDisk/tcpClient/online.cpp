@@ -2,7 +2,7 @@
 
 #include "online.h"
 #include "ui_online.h"
-
+#include "clientwin.h"
 Online::Online(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Online)

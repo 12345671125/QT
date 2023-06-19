@@ -5,7 +5,6 @@
 
 #include <QWidget>
 #include "protocol.h"
-#include "clientwin.h"
 
 namespace Ui {
 class Online;

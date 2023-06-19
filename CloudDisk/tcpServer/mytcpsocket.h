@@ -7,7 +7,6 @@
 #include <QDebug>
 #include "protocol.h"
 #include "opedb.h"
-#include"mytcpserver.h"
 
 class myTcpSocket : public QTcpSocket
 {

@@ -39,7 +39,7 @@ void clientWin::initconfig()
        QByteArray byteArr =  file.readAll();//将配置文件中的内容读出，以二进制的形式储存在QByteArray中
        QString configData = QString::fromStdString(byteArr.toStdString());//将二进制数据转换为QString的形式
 //       qDebug()<<configData;
-       configData.replace("\r\n",";");
+       configData.replace("\n",";");
        QStringList strList = configData.split(";");
        for(int i = 0;i<strList.length();i++){ //遍历strList,截取ip和port
             strList[i]   = strList[i].mid(strList[i].indexOf("=")+1,-1);
@@ -106,8 +106,17 @@ void clientWin::recvMsg()
         case ENUM_MSG_TYPE_SEARCHUSER_RESPOND:
     {
         OpeWidget::getinstance().getFriend()->showSearchUser(pdu);
+        break;
     }
-
+        case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
+    {
+        break;
+    }
+        case ENUM_MSG_TYPE_ADDFRIEND_RESPOND:
+    {
+        QMessageBox::information(this,"添加好友",pdu->caData);
+        break;
+    }
         default: break;
     }
 }
