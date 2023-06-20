@@ -23,7 +23,7 @@ public:
     void handleOffline(const char *name);
     QStringList handleSearchUser(const char *userName);
     QStringList handleAllOnline(); //用于显示所有用户
-    int handleAddFriend(const char* pername,const char* name);
+    int handleAddFriend(const char* pername,const char* name,int type = 0);
     ~OpeDB();
 signals:
 
@@ -32,6 +32,7 @@ public slots:
 private:
     QSqlDatabase m_db; //数据库对象，用于连接数据库
     void init(); //用于数据库对象的初始化
+    int getId(const char* username);
 
 };
 

@@ -89,7 +89,9 @@ void clientWin::recvMsg()
         qDebug() << pdu->caData;
         if(strcmp(pdu->caData,LOGIN_OK) == 0){
             QMessageBox::information(this,"登录","LOGIN_OK");
+            this->setWindowTitle("当前用户:"+this->m_strLoginName);
             OpeWidget::getinstance().show();
+            OpeWidget::getinstance().setWindowTitle("当前用户:"+this->m_strLoginName);
             this->hide();
         }else if(strcmp(pdu->caData,LOGIN_FAILED) == 0){
             qDebug() << 1;
@@ -110,6 +112,21 @@ void clientWin::recvMsg()
     }
         case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
     {
+        char username[64] = {"\n"}; //创建username数组用于存放用户名
+        memset(username,0,sizeof(username));
+        strncpy(username,pdu->caData,64);//从pdu.cadata中读取username
+        int ret = QMessageBox::information(this,"好友请求",QString("%1 想要添加你为好友").arg(username),QMessageBox::Yes,QMessageBox::No);
+        if(ret == QMessageBox::Yes)
+        {
+            PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ADDFRIEND_AGREE,"0");
+            memcpy(pdu.caData,username,64);
+            memcpy(pdu.caData+64,this->m_strLoginName.toStdString().c_str(),64);
+            this->clientSocket.write((char*)&pdu,pdu.uiPDULen);
+        }else
+        {
+            PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ADDFRIEND_REFUSE,this->getLoginName()+username);
+            this->clientSocket.write((char*)&pdu,pdu.uiPDULen);
+        }
         break;
     }
         case ENUM_MSG_TYPE_ADDFRIEND_RESPOND:

@@ -26,6 +26,8 @@ public slots:
     void searchUser(PDU* pdu);
 
     void addFriends(PDU* pdu);
+
+    void handleFriRespond(PDU* pdu,int type);
 //    void logout();
 signals:
     void offline(myTcpSocket* mySocket);

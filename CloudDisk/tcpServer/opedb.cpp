@@ -88,37 +88,51 @@ QStringList OpeDB::handleAllOnline()
     return result;
 }
 
-int OpeDB::handleAddFriend(const char *pername, const char *name)
+int OpeDB::handleAddFriend(const char *pername, const char *name,int type)
 {
     if(pername == NULL || name == NULL){
         return -1;
     }
-    QString data = QString("select * from friend where (id = (select id from userInfo where name = \'%1\') and friendId = (select id from userInfo where name = \'%2\')) or (id = (select id from userInfo where name = \'%3\') and friendId = (select id from userInfo where name = \'%4\'))").arg(pername).arg(name).arg(name).arg(pername);
-    qDebug() << data;
-    QSqlQuery query;
-    query.exec(data);
-    if(query.next())
-    {
-        return 0; //双方已经是好友
-    }
-    else
-    {
-        data = QString("select online from userInfo where name = \'%1\'").arg(pername);
+    if(type == 0){
+        QString data = QString("select * from friend where (id = (select id from userInfo where name = \'%1\') and friendId = (select id from userInfo where name = \'%2\')) or (id = (select id from userInfo where name = \'%3\') and friendId = (select id from userInfo where name = \'%4\'))").arg(pername).arg(name).arg(name).arg(pername);
+        qDebug() << data;
         QSqlQuery query;
         query.exec(data);
-        if(query.next()){
-            int ret = query.value(0).toInt();
-            if(ret == 1){
-                return 1;//在线
+        if(query.next())
+        {
+            return 0; //双方已经是好友
+        }
+        else
+        {
+            data = QString("select online from userInfo where name = \'%1\'").arg(pername);
+            QSqlQuery query;
+            query.exec(data);
+            if(query.next()){
+                int ret = query.value(0).toInt();
+                if(ret == 1){
+                    return 1;//在线
+                }
+                else if(ret == 0){
+                    return 2;//不在线
+                }
+            }else{
+                return 3;//用户不存在
             }
-            else if(ret == 0){
-                return 2;//不在线
-            }
-        }else{
-            return 3;//用户不存在
+
+        }
+
+    }else if(type == 1){
+        int userId = this->getId(name);
+        int perId = this->getId(pername);
+        if(userId != -1 && perId != -1){
+            QString data = QString("insert into friend(id,friendId) values(%1,%2);").arg(userId).arg(perId);
+            qDebug()<<data;
+            QSqlQuery query;
+            query.exec(data);
         }
 
     }
+
 }
 
 OpeDB::~OpeDB()
@@ -139,5 +153,23 @@ void OpeDB::init()
         }
     }else{
         QMessageBox::critical(NULL,"打开数据库","打开数据库失败");
+    }
+}
+
+int OpeDB::getId(const char *username)
+{
+    int id = 0;
+    if(username  == NULL){
+        return -1;
+    }else{
+        QString data = QString("select id from userInfo where name = \'%1\'").arg(username);
+        qDebug()<<data;
+        QSqlQuery query;
+        query.exec(data);
+        if(query.next()){
+            id = query.value(0).toInt();
+        }
+        qDebug()<<"userId"<<id;
+        return id;
     }
 }

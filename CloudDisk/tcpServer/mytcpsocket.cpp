@@ -43,6 +43,15 @@ void myTcpSocket::recvMsg()
 
         case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
         this->addFriends(pdu);
+        break;
+
+        case ENUM_MSG_TYPE_ADDFRIEND_AGREE:
+        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_AGREE);
+        break;
+        case ENUM_MSG_TYPE_ADDFRIEND_REFUSE:
+        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_REFUSE);
+        break;
+
         default: break;
     }
 }
@@ -155,4 +164,22 @@ void myTcpSocket::addFriends(PDU *pdu)
     }
 
 
+}
+
+void myTcpSocket::handleFriRespond(PDU *pdu,int type)
+{
+    if(type == ENUM_MSG_TYPE_ADDFRIEND_AGREE){
+        char userName[64] = {"\n"};
+        char perName[64] = {"\n"};
+        memcpy(userName,pdu->caData,64);
+        memcpy(perName,pdu->caData+64,64);
+        qDebug()<<userName;
+        qDebug()<<perName;
+        OpeDB::getInsance().handleAddFriend(perName,userName,1);
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方同意");
+        this->write((char*)&pdu,pdu.uiPDULen);
+    }else if(type == ENUM_MSG_TYPE_ADDFRIEND_REFUSE){
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方拒绝");
+        this->write((char*)&pdu,pdu.uiPDULen);
+    }
 }
