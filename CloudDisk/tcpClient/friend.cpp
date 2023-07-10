@@ -42,10 +42,12 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     online->hide();
     setLayout(pMain);
 
+    this->flushFriends();
+
 /*设置刷新好友定时器*/
     this->m_Timer = new QTimer(this);
     m_Timer->setInterval(5000);
-    m_Timer->start();
+//    m_Timer->start();
 
     QObject::connect(m_pShowOnlineUserPB,SIGNAL(clicked(bool)),this,SLOT(showOnline()));
     QObject::connect(m_pSearchUserPB,SIGNAL(clicked(bool)),this,SLOT(searchUser()));
@@ -53,7 +55,9 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     QObject::connect(m_Timer,SIGNAL(timeout()),this,SLOT(flushFriends()));
     QObject::connect(m_pFlushFriendPB,SIGNAL(clicked(bool)),this,SLOT(flushFriends()));
 
-    QObject::connect(m_pDelFriendPB,SIGNAL(click(bool)),this,SLOT(deleteFriend()));
+    QObject::connect(m_pDelFriendPB,SIGNAL(clicked(bool)),this,SLOT(deleteFriend()));
+
+
 }
 
 Friend::~Friend()
@@ -121,7 +125,14 @@ void Friend::flushFriends()
 
 void Friend::deleteFriend()
 {
-    QString curName = OpeWidget::getinstance().getFriend()->m_pFriendListWidget->currentItem()->text();
+    QString curName = OpeWidget::getinstance().getFriend()->m_pFriendListWidget->currentItem()->text(); //获取当前选中的好友用户名
+
+    if(QMessageBox::information(this,"删除好友","确定要删除好友"+curName+"?",QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes){
+    /*向服务器发送删除好友请求*/
     PDU pdu = PDU::default_request(ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,curName+clientWin::getInstance().getLoginName());
     clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+}
+
+
+
 }

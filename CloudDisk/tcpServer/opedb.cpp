@@ -165,6 +165,7 @@ void OpeDB::handleDelFriend(const char *username, const char *pername)
     int perId = getId(pername);
     int userId = getId(username);
     QString data = QString("delete from friend where (id = %1 and friendId = %2) or (id = %3 and friendId = %4)").arg(perId).arg(userId).arg(userId).arg(perId);
+    qDebug()<<data;
     QSqlQuery query;
     query.exec(data);
 
@@ -198,7 +199,7 @@ int OpeDB::getId(const char *username)  //用于从数据库中通过用户名�
         return -1;
     }else{
         QString data = QString("select id from userInfo where name = \'%1\'").arg(username);
-        qDebug()<<data;
+        //qDebug()<<data;
         QSqlQuery query;
         query.exec(data);
         if(query.next()){
@@ -213,7 +214,7 @@ QString OpeDB::getUserName(const int id) //用于从数据库中通过用户id�
 {
     QString FriendName;
     QString data = QString("select name from userInfo where id = %1").arg(id);
-    qDebug()<<data;
+    //qDebug()<<data;
     QSqlQuery query;
     query.exec(data);
     if(query.next()){
