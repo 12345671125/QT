@@ -119,7 +119,8 @@ void Friend::searchUser()
 
 void Friend::flushFriends()
 {
-    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST,clientWin::getInstance().getLoginName());
+    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST,"");
+    memcpy(pdu.caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
     clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
 }
 
@@ -129,8 +130,11 @@ void Friend::deleteFriend()
 
     if(QMessageBox::information(this,"删除好友","确定要删除好友"+curName+"?",QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes){
     /*向服务器发送删除好友请求*/
-    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,curName+clientWin::getInstance().getLoginName());
+    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,"");
+    memcpy(pdu.caData,curName.toStdString().c_str(),64);
+    memcpy(pdu.caData+64,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
     clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+    this->flushFriends();
 }
 
 
