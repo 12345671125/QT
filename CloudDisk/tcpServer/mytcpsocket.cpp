@@ -1,5 +1,5 @@
 /*myTcpSocket类用于处理并响应客户端的请求*/
-
+#pragma execution_character_set("utf-8")
 #include "mytcpsocket.h"
 #include"mytcpserver.h"
 
@@ -48,10 +48,17 @@ void myTcpSocket::recvMsg()
         case ENUM_MSG_TYPE_ADDFRIEND_AGREE:
         this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_AGREE);
         break;
+
         case ENUM_MSG_TYPE_ADDFRIEND_REFUSE:
         this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_REFUSE);
         break;
 
+        case ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST:
+        this->handleFlushFriends(pdu);
+        break;
+
+        case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST:
+        this->handleDelFriend(pdu);
         default: break;
     }
 }
@@ -182,4 +189,37 @@ void myTcpSocket::handleFriRespond(PDU *pdu,int type)
         PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方拒绝");
         this->write((char*)&pdu,pdu.uiPDULen);
     }
+}
+
+void myTcpSocket::handleFlushFriends(PDU *pdu)
+{
+    char userName[64] = {"/n"};
+    memcpy(userName,pdu->caData,64);
+//    qDebug()<<userName;
+    QStringList resultList = OpeDB::getInsance().handleFlushFriends(userName);
+    uint msgLen = resultList.length();
+//    qDebug()<<msgLen;
+    PDU* sendPdu = createPDU(msgLen*64);
+    sendPdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND;
+    memcpy(sendPdu->caData,QString("success").toStdString().c_str(),8);
+    int i = 0;
+    while(i<resultList.length()){
+        memcpy((char*)sendPdu->caMsg+(i*64),resultList[i].toStdString().c_str(),64);
+//        qDebug()<<resultList[i].toStdString();
+        i++;
+    }
+    this->write((char*)sendPdu,sendPdu->uiPDULen);
+    delete sendPdu;
+    sendPdu = nullptr;
+}
+
+void myTcpSocket::handleDelFriend(PDU *pdu)
+{
+    if(pdu == NULL) return;
+    char pername[64] = {"/n"};
+    char username[64] = {"/n"};
+    memcpy(pername,(char*)pdu->caData,64);
+    memcpy(username,((char*)pdu->caData)+64,64);
+    OpeDB::getInsance().handleDelFriend(username,pername);
+
 }

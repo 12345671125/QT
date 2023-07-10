@@ -134,6 +134,9 @@ void clientWin::recvMsg()
         QMessageBox::information(this,"添加好友",pdu->caData);
         break;
     }
+        case ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:
+        OpeWidget::getinstance().getFriend()->updateFriend(pdu);
+        break;
         default: break;
     }
 }

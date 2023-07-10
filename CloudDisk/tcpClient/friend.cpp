@@ -1,5 +1,5 @@
 /*好友界面类*/
-
+#pragma execution_character_set("utf-8")
 #include "friend.h"
 #include "protocol.h"
 #include "clientwin.h"
@@ -42,8 +42,24 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     online->hide();
     setLayout(pMain);
 
+/*设置刷新好友定时器*/
+    this->m_Timer = new QTimer(this);
+    m_Timer->setInterval(5000);
+    m_Timer->start();
+
     QObject::connect(m_pShowOnlineUserPB,SIGNAL(clicked(bool)),this,SLOT(showOnline()));
     QObject::connect(m_pSearchUserPB,SIGNAL(clicked(bool)),this,SLOT(searchUser()));
+
+    QObject::connect(m_Timer,SIGNAL(timeout()),this,SLOT(flushFriends()));
+    QObject::connect(m_pFlushFriendPB,SIGNAL(clicked(bool)),this,SLOT(flushFriends()));
+
+    QObject::connect(m_pDelFriendPB,SIGNAL(click(bool)),this,SLOT(deleteFriend()));
+}
+
+Friend::~Friend()
+{
+    this->m_Timer->stop();
+    delete this->m_Timer;
 }
 
 void Friend::showAllOnlineUser(PDU* pdu)
@@ -57,6 +73,21 @@ void Friend::showSearchUser(PDU *pdu)
 {
     if(pdu == NULL) return;
     this->online->showSearchUser(pdu);
+}
+
+void Friend::updateFriend(PDU *pdu)
+{
+    this->m_pFriendListWidget->clear(); //清空现有好友队列
+    if(NULL == pdu){
+        return;
+    }
+    uint uiSize = pdu->uiMsgLen / 64;
+    char caName[64] = {'\0'};
+    for(uint i = 0;i<uiSize;i++){
+        memcpy(caName,((char*)pdu->caMsg)+(i*64),64);
+        this->m_pFriendListWidget->addItem(caName);
+//        qDebug()<<caName;
+    }
 }
 
 void Friend::showOnline()
@@ -80,4 +111,17 @@ void Friend::searchUser()
          PDU  pdu = PDU::default_request(ENUM_MSG_TYPE_SEARCHUSER_REQUEST,userName.toStdString().c_str());
          clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
     }
+}
+
+void Friend::flushFriends()
+{
+    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST,clientWin::getInstance().getLoginName());
+    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+}
+
+void Friend::deleteFriend()
+{
+    QString curName = OpeWidget::getinstance().getFriend()->m_pFriendListWidget->currentItem()->text();
+    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,curName+clientWin::getInstance().getLoginName());
+    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
 }

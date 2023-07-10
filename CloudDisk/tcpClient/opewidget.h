@@ -1,6 +1,6 @@
 #ifndef OPEWIDGET_H
 #define OPEWIDGET_H
-
+#pragma once
 #include <QWidget>
 #include <QListWidget>
 #include "friend.h"

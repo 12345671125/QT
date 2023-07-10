@@ -2,7 +2,7 @@
 
 #ifndef OPEDB_H
 #define OPEDB_H
-
+#pragma once
 
 
 #include <QObject>
@@ -24,6 +24,8 @@ public:
     QStringList handleSearchUser(const char *userName);
     QStringList handleAllOnline(); //用于显示所有用户
     int handleAddFriend(const char* pername,const char* name,int type = 0);
+    QStringList handleFlushFriends(const char* userName);
+    void handleDelFriend(const char* username,const char* pername);
     ~OpeDB();
 signals:
 
@@ -33,6 +35,7 @@ private:
     QSqlDatabase m_db; //数据库对象，用于连接数据库
     void init(); //用于数据库对象的初始化
     int getId(const char* username);
+    QString getUserName(const int id);
 
 };
 

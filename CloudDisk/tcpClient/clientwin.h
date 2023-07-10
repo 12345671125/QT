@@ -3,7 +3,7 @@
 
 #ifndef CLIENTWIN_H
 #define CLIENTWIN_H
-
+#pragma once
 #include <QMainWindow>
 #include <QTcpSocket>
 #include <QDebug>

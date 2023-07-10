@@ -2,7 +2,7 @@
 
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
-
+#pragma once
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
@@ -34,8 +34,18 @@ enum ENUM_MSG_TYPE{
 
     ENUM_MSG_TYPE_ADDFRIEND_AGREE, //同意添加好友
     ENUM_MSG_TYPE_ADDFRIEND_REFUSE,//拒绝添加好友
-//    ENUM_MSG_TYPE,
-//    ENUM_MSG_TYPE,
+
+    ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST,//刷新好友请求
+    ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND,//刷新好友回复
+
+    ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST, //删除好友请求
+    ENUM_MSG_TYPE_DELETE_FRIEND_RESPOND, //删除好友回复
+
+    //    ENUM_MSG_TYPE,
+    //    ENUM_MSG_TYPE,
+
+    //    ENUM_MSG_TYPE,
+    //    ENUM_MSG_TYPE,
     ENUM_MSG_TYPE_MAX = 0x00ffffff,
 };
 struct PDU

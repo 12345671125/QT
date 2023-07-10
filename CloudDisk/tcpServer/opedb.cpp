@@ -135,6 +135,41 @@ int OpeDB::handleAddFriend(const char *pername, const char *name,int type)
 
 }
 
+QStringList OpeDB::handleFlushFriends(const char* userName)
+{
+    QStringList resultList;
+    resultList.clear();
+    if(userName == nullptr) return resultList;
+    int userid = this->getId(userName);
+    QString data = QString("select friendId from friend where id = %1").arg(userid);
+    QSqlQuery query;
+    query.exec(data);
+    while(query.next()){
+        int ret = query.value(0).toInt();
+        resultList.push_back(this->getUserName(ret));
+    }
+    data = QString("select id from friend where friendId = %1").arg(userid);
+    query.exec(data);
+    while(query.next()){
+        int ret = query.value(0).toInt();
+        resultList.push_back(this->getUserName(ret));
+    }
+
+    return resultList;
+
+}
+
+void OpeDB::handleDelFriend(const char *username, const char *pername)
+{
+    if(username == nullptr || pername == nullptr) return;
+    int perId = getId(pername);
+    int userId = getId(username);
+    QString data = QString("delete from friend where (id = %1 and friendId = %2) or (id = %3 and friendId = %4)").arg(perId).arg(userId).arg(userId).arg(perId);
+    QSqlQuery query;
+    query.exec(data);
+
+}
+
 OpeDB::~OpeDB()
 {
     this->m_db.close();
@@ -156,7 +191,7 @@ void OpeDB::init()
     }
 }
 
-int OpeDB::getId(const char *username)
+int OpeDB::getId(const char *username)  //用于从数据库中通过用户名获取对应用户id
 {
     int id = 0;
     if(username  == NULL){
@@ -169,7 +204,21 @@ int OpeDB::getId(const char *username)
         if(query.next()){
             id = query.value(0).toInt();
         }
-        qDebug()<<"userId"<<id;
+        //qDebug()<<"userId"<<id;
         return id;
     }
+}
+
+QString OpeDB::getUserName(const int id) //用于从数据库中通过用户id获取用户名
+{
+    QString FriendName;
+    QString data = QString("select name from userInfo where id = %1").arg(id);
+    qDebug()<<data;
+    QSqlQuery query;
+    query.exec(data);
+    if(query.next()){
+        FriendName = QString(query.value(0).toString());
+    }
+//    qDebug()<<FriendName;
+    return FriendName;
 }

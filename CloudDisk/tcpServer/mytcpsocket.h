@@ -2,7 +2,7 @@
 
 #ifndef MYTCPSOCKET_H
 #define MYTCPSOCKET_H
-
+#pragma once
 #include <QTcpSocket>
 #include <QDebug>
 #include "protocol.h"
@@ -28,6 +28,10 @@ public slots:
     void addFriends(PDU* pdu);
 
     void handleFriRespond(PDU* pdu,int type);
+
+    void handleFlushFriends(PDU* pdu);
+
+    void handleDelFriend(PDU* pdu);
 //    void logout();
 signals:
     void offline(myTcpSocket* mySocket);

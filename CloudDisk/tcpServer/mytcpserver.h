@@ -3,7 +3,7 @@
 
 #ifndef MYTCPSERVER_H
 #define MYTCPSERVER_H
-
+#pragma once
 #include <QTcpServer>
 #include "mytcpsocket.h"
 #include <QList> //引入QList 用来存放socket

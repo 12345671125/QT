@@ -2,7 +2,7 @@
 
 #ifndef ONLINE_H
 #define ONLINE_H
-
+#pragma once
 #include <QWidget>
 #include "protocol.h"
 

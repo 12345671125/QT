@@ -2,7 +2,7 @@
 
 #ifndef SERVERWIN_H
 #define SERVERWIN_H
-
+#pragma once
 #include <QMainWindow>
 #include <QDebug>
 #include <QTcpSocket>
