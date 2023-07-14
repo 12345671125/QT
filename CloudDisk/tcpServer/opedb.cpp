@@ -143,19 +143,19 @@ QStringList OpeDB::handleFlushFriends(const char* userName)
     int userid = this->getId(userName);
 //     qDebug()<<userName;
     //qDebug()<<userid;
-    QString data = QString("select friendId from friend where id = %1").arg(userid);
+    QString data = QString("select friend.friendId,userInfo.online from friend,userInfo where friend.id = %1 and friend.id = userInfo.id").arg(userid);
     QSqlQuery query;
     query.exec(data);
     //qDebug()<<query.next();
     while(query.next()){
         int ret = query.value(0).toInt();
-        resultList.push_back(this->getUserName(ret));
+        resultList.push_back(this->getUserName(ret).append(":" + query.value(1).toString()));
     }
-    data = QString("select id from friend where friendId = %1").arg(userid);
+    data = QString("select friend.id,userInfo.online from friend,userInfo where friend.id = userInfo.id and friend.friendId = %1").arg(userid);
     query.exec(data);
     while(query.next()){
         int ret = query.value(0).toInt();
-        resultList.push_back(this->getUserName(ret));
+        resultList.push_back(this->getUserName(ret).append(":" + query.value(1).toString()));
     }
 
     return resultList;
@@ -175,6 +175,36 @@ void OpeDB::handleDelFriend(const char *username, const char *pername)
     query.exec(data);
 
 }
+
+//QStringList OpeDB::handleGetFOnlineStatus(const char *username)
+//{
+//    QStringList resultList;
+//    resultList.clear();
+//    if(username == nullptr) return resultList;
+//    int userid = this->getId(username);
+//    //     qDebug()<<userName;
+//    //qDebug()<<userid;
+//    QString dataName = QString("select friend.friendId,userInfo.online from friend,userInfo where friend.id = %1 and friend.id = userInfo.id").arg(userid);
+////    QString dataOnline = QString("select online from friend where id = %1").arg(userid);
+//    QSqlQuery query;
+////    QSqlQuery query1;
+//    query.exec(dataName);
+//    //qDebug()<<query.next();
+//    while(query.next()){
+//        int ret = query.value(0).toInt();
+//        resultList.push_back(this->getUserName(ret).append(":" + query.value(0).toString()));
+//    }
+//    dataName = QString("select friend.id,userInfo.online from friend,userInfo where friend.id = userInfo.id and friend.friendId = %1").arg(userid);
+//    query.exec(dataName);
+//    while(query.next()){
+//        int ret = query.value(0).toInt();
+//        resultList.push_back(this->getUserName(ret).append(":" + query.value(0).toString()));
+//    }
+
+//    return resultList;
+
+
+//}
 
 OpeDB::~OpeDB()
 {

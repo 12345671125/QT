@@ -20,12 +20,13 @@ public:
     static OpeDB& getInsance();  //静态成员函数，单列模式创建数据库对象
     bool handleRegit(const char* name, const char* pwd); //用于处理注册
     bool handleLogin(const char *name, const char *pwd); //用于处理登录
-    void handleOffline(const char *name);
-    QStringList handleSearchUser(const char *userName);
+    void handleOffline(const char *name);//用于处理注销
+    QStringList handleSearchUser(const char *userName); //用于处理搜索用户
     QStringList handleAllOnline(); //用于显示所有用户
-    int handleAddFriend(const char* pername,const char* name,int type = 0);
-    QStringList handleFlushFriends(const char* userName);
-    void handleDelFriend(const char* username,const char* pername);
+    int handleAddFriend(const char* pername,const char* name,int type = 0);//用于添加好友
+    QStringList handleFlushFriends(const char* userName);//用于刷新好友
+    void handleDelFriend(const char* username,const char* pername); //用于删除好友
+//    QStringList handleGetFOnlineStatus(const char* username); //用于刷新好友状态
     ~OpeDB();
 signals:
 

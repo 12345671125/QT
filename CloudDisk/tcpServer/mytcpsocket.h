@@ -32,6 +32,8 @@ public slots:
     void handleFlushFriends(PDU* pdu);
 
     void handleDelFriend(PDU* pdu);
+
+//    void handleGetFOnlineStatus(PDU * pdu);
 //    void logout();
 signals:
     void offline(myTcpSocket* mySocket);

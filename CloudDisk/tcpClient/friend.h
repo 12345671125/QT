@@ -34,6 +34,7 @@ public slots:
     void searchUser(); //查找用户槽函数
     void flushFriends(); //刷新好友列表
     void deleteFriend(); //删除好友
+    void privateChat(); //私聊
 private:
     QTextEdit* m_pShowMsgTE;
     QListWidget* m_pFriendListWidget;
@@ -49,6 +50,7 @@ private:
     QTimer* m_Timer; //这个定时器用与刷新好友P
 
     Online* online;
+//    void getFOnlineStatus(); //获取好友在线状态
 };
 
 #endif // FRIEND_H

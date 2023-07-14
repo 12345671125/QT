@@ -21,6 +21,7 @@ SOURCES += \
     clientwin.cpp \
     online.cpp \
     opewidget.cpp \
+    privatechat.cpp \
     protocol.cpp
 
 HEADERS += \
@@ -28,11 +29,13 @@ HEADERS += \
     friend.h \
     online.h \
     opewidget.h \
+    privatechat.h \
     protocol.h
 
 FORMS += \
     clientwin.ui \
-    online.ui
+    online.ui \
+    privatechat.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

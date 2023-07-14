@@ -195,7 +195,7 @@ void myTcpSocket::handleFlushFriends(PDU *pdu)
 {
     char userName[64] = {"/n"};
     memcpy(userName,pdu->caData,64);
-    qDebug()<<userName;
+//    qDebug()<<userName;
     QStringList resultList = OpeDB::getInsance().handleFlushFriends(userName);
     uint msgLen = resultList.length();
 //    qDebug()<<msgLen;
@@ -225,3 +225,11 @@ void myTcpSocket::handleDelFriend(PDU *pdu)
     OpeDB::getInsance().handleDelFriend(username,pername);
 
 }
+
+//void myTcpSocket::handleGetFOnlineStatus(PDU *pdu)
+//{
+//    if(pdu == NULL) return;
+//    char username[] = {"/n"};
+//    memcpy(username,(char*)pdu->caData,64);
+
+//}

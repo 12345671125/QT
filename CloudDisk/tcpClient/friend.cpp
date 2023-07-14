@@ -3,6 +3,7 @@
 #include "friend.h"
 #include "protocol.h"
 #include "clientwin.h"
+#include "privatechat.h"
 
 Friend::Friend(QWidget *parent) : QWidget(parent)
 {
@@ -46,8 +47,8 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
 
 /*设置刷新好友定时器*/
     this->m_Timer = new QTimer(this);
-    m_Timer->setInterval(5000);
-//    m_Timer->start();
+    m_Timer->setInterval(10000); //设置刷新定时器的时间间隔为10秒
+    m_Timer->start();
 
     QObject::connect(m_pShowOnlineUserPB,SIGNAL(clicked(bool)),this,SLOT(showOnline()));
     QObject::connect(m_pSearchUserPB,SIGNAL(clicked(bool)),this,SLOT(searchUser()));
@@ -56,6 +57,7 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     QObject::connect(m_pFlushFriendPB,SIGNAL(clicked(bool)),this,SLOT(flushFriends()));
 
     QObject::connect(m_pDelFriendPB,SIGNAL(clicked(bool)),this,SLOT(deleteFriend()));
+    QObject::connect(m_pPrivateChatPB,SIGNAL(clicked(bool)),this,SLOT(privateChat()));
 
 
 }
@@ -89,7 +91,18 @@ void Friend::updateFriend(PDU *pdu)
     char caName[64] = {'\0'};
     for(uint i = 0;i<uiSize;i++){
         memcpy(caName,((char*)pdu->caMsg)+(i*64),64);
-        this->m_pFriendListWidget->addItem(caName);
+        QString str = QString::fromLocal8Bit(caName,64);
+        QChar status = str.at(str.length()-1);
+        str  = str.mid(0,str.length()-2);
+        if(status == '1'){
+            str.append(" : 在线");
+            qDebug()<<str;
+            this->m_pFriendListWidget->addItem(str);
+        }else if(status == '0'){
+            str.append(" : 离线");
+             qDebug()<<str;
+            this->m_pFriendListWidget->addItem(str);
+        }
 //        qDebug()<<caName;
     }
 }
@@ -140,3 +153,18 @@ void Friend::deleteFriend()
 
 
 }
+
+void Friend::privateChat()
+{
+
+    PrivateChat::getInstance().setChatName(this->m_pFriendListWidget->currentItem()->text());
+//    qDebug()<<this->m_pFriendListWidget->currentItem()->text();
+    PrivateChat::getInstance().show();
+}
+
+//void Friend::getFOnlineStatus()
+//{
+//    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_FONLINE_STATUS_REQUEST,"");
+//    memcpy(pdu.caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
+//    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+//}
