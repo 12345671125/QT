@@ -1,6 +1,7 @@
 #ifndef PRIVATECHAT_H
 #define PRIVATECHAT_H
 
+#include "protocol.h"
 #include <QWidget>
 
 namespace Ui {
@@ -16,6 +17,7 @@ public:
     ~PrivateChat();
     void setChatName(QString strName);
     static PrivateChat &getInstance();
+    void showMsg(PDU* pdu = NULL); //显示消息
 
 private slots:
     void on_sendPtn_clicked();

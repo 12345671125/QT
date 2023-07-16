@@ -2,6 +2,7 @@
 
 #include "clientwin.h"
 #include "ui_clientwin.h"
+#include "privatechat.h"
 
 clientWin::clientWin(QWidget *parent)
     : QMainWindow(parent)
@@ -58,6 +59,8 @@ void clientWin::initconfig()
 void clientWin::connectToServer(){
     this->clientSocket.connectToHost(QHostAddress(this->ip),this->port);  //连接服务器
 }
+
+
 
 void clientWin::showConnected(){
     QMessageBox::information(this,"connectToSercer","连接服务器成功!");
@@ -135,10 +138,31 @@ void clientWin::recvMsg()
         break;
     }
         case ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:
+    {
         OpeWidget::getinstance().getFriend()->updateFriend(pdu);
         break;
-        default: break;
     }
+
+
+    case ENUM_MSG_TYPE_PRIVATE_CHAT_TRANSMIT:
+    {
+        this->showPrivateMsg(pdu);
+        break;
+    }
+
+
+
+
+
+        case ENUM_MSG_TYPE_ERROR_RESPOND:
+    {
+        QMessageBox::critical(this,"ERROR","请求错误!,请联系管理员");
+        break;
+    }
+
+
+    default: break;
+  }
 }
 
 clientWin::~clientWin()
@@ -205,7 +229,30 @@ void clientWin::on_regist_clicked()
 
 }
 
+void clientWin::showPrivateMsg(PDU *pdu)
+{
+    qDebug()<<"showPrivateMsg";
+    char username[64] = {"\0"};
+    char pername[64] = {"\0"};
+    memcpy(username,pdu->caData,64);
+    memcpy(pername,pdu->caData+64,64); //解析协议中的私聊对象名
+    QString uname = username;
+    if(!PrivateChat::getInstance().isHidden()||!PrivateChat::getInstance().isActiveWindow() || !PrivateChat::getInstance().isVisible()){
+        int result =  QMessageBox::information(this,"新消息","你有一条来自"+uname+"的新消息,是否打开聊天框？",QMessageBox::Yes,QMessageBox::No);
+        if(result == QMessageBox::Yes){
+            PrivateChat::getInstance().setChatName(uname);
+            PrivateChat::getInstance().show();
+            PrivateChat::getInstance().showMsg(pdu);
+
+        }
+    }else{
+        PrivateChat::getInstance().showMsg(pdu);
+    }
+
+}
+
 void clientWin::on_logout_clicked()
 {
 
 }
+

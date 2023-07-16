@@ -25,7 +25,7 @@ void myTcpServer::incomingConnection(qintptr handle)  /*当服务器端监听到
     QObject:: connect(socket,SIGNAL(offline(myTcpSocket*)),this,SLOT(deleteSocket(myTcpSocket*)));
 }
 
-void myTcpServer::resend(const char *pername, PDU *pdu)
+void myTcpServer::FResend(const char *pername, PDU *pdu)
 {
     if(pername == NULL || pdu == NULL){
         return;
@@ -35,6 +35,22 @@ void myTcpServer::resend(const char *pername, PDU *pdu)
         if(this->socketList.at(i)->getName() == strName){
             this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen); //通过登陆时传过来的username,将好友请求转发给对应用户
             break;
+        }
+    }
+}
+
+void myTcpServer::MsgResend(const char *pername, PDU *pdu)
+{
+    if(pername == NULL || pdu == NULL)
+        return;
+    QString strName = pername;
+//    qDebug()<<strName;
+    for(int i = 0;i<this->socketList.length();i++){
+//        qDebug()<<"MSGRESEND_for";
+        if(this->socketList.at(i)->getName() == strName){ //如果socket列表中有对应的用户名
+//            qDebug()<<"MSGRESEND_if";
+            pdu->uiMsgType = ENUM_MSG_TYPE_PRIVATE_CHAT_TRANSMIT; //将协议中的请求类型改为消息转发
+            this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen); //转发消息
         }
     }
 }

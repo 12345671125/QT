@@ -37,29 +37,44 @@ void myTcpSocket::recvMsg()
         break;
 
         case ENUM_MSG_TYPE_SEARCHUSER_REQUEST:
-        this->searchUser(pdu);
+        this->searchUser(pdu); //搜索用户
         break;
 
 
         case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
-        this->addFriends(pdu);
+        this->addFriends(pdu); //添加用户
         break;
 
         case ENUM_MSG_TYPE_ADDFRIEND_AGREE:
-        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_AGREE);
+        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_AGREE);//同意添加用户
         break;
 
         case ENUM_MSG_TYPE_ADDFRIEND_REFUSE:
-        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_REFUSE);
+        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_REFUSE); //拒绝添加用户
         break;
 
-        case ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST:
+        case ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST: //刷新好友
         this->handleFlushFriends(pdu);
         break;
 
-        case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST:
+        case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST: //删除好友
         this->handleDelFriend(pdu);
-        default: break;
+        break;
+
+
+        case ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST: //私聊请求
+        this->handlePrivateChat(pdu);
+        break;
+
+
+
+
+
+
+
+        default:
+        this->requestFault(pdu);
+        break;
     }
 }
 
@@ -158,7 +173,7 @@ void myTcpSocket::addFriends(PDU *pdu)
         write((char*)&pdu,pdu.uiPDULen);
 
     }else if(ret == 1){
-        myTcpServer::getInstance().resend(pername,pdu);
+        myTcpServer::getInstance().FResend(pername,pdu);
 
     }else if(ret ==2){
         PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user offine");
@@ -225,6 +240,24 @@ void myTcpSocket::handleDelFriend(PDU *pdu)
     OpeDB::getInsance().handleDelFriend(username,pername);
 
 }
+
+void myTcpSocket::handlePrivateChat(PDU *pdu)
+{
+//    qDebug()<<"handlePrivateChat";
+    char username[64] = {"\0"};
+    char pername[64] = {"\0"};
+    memcpy(username,pdu->caData,64);
+    memcpy(pername,pdu->caData+64,64); //解析协议中的私聊对象名
+    myTcpServer::getInstance().MsgResend(pername,pdu); //进行转发
+}
+
+void myTcpSocket::requestFault(PDU *pdu)
+{
+    PDU requestPdu = PDU::default_respond(ENUM_MSG_TYPE_ERROR_RESPOND,"REQUESTFAULT!");
+    this->write((char*)&requestPdu,requestPdu.uiPDULen);
+}
+
+
 
 //void myTcpSocket::handleGetFOnlineStatus(PDU *pdu)
 //{

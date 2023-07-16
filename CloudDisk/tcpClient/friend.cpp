@@ -48,7 +48,7 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
 /*设置刷新好友定时器*/
     this->m_Timer = new QTimer(this);
     m_Timer->setInterval(10000); //设置刷新定时器的时间间隔为10秒
-    m_Timer->start();
+//    m_Timer->start();
 
     QObject::connect(m_pShowOnlineUserPB,SIGNAL(clicked(bool)),this,SLOT(showOnline()));
     QObject::connect(m_pSearchUserPB,SIGNAL(clicked(bool)),this,SLOT(searchUser()));

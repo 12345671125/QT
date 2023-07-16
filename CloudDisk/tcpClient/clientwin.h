@@ -52,5 +52,6 @@ private:
     QString m_strLoginName;
     void initconfig(); //初始化服务器配置
     void connectToServer();
+    void showPrivateMsg(PDU* pdu);
 };
 #endif // CLIENTWIN_H

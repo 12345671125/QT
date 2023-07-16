@@ -15,7 +15,8 @@ public:
 
     static myTcpServer& getInstance(); //单例模式
     void incomingConnection(qintptr handle);
-    void resend(const char* pername,PDU *pdu);
+    void FResend(const char* pername,PDU *pdu);
+    void MsgResend(const char* pername,PDU* pdu);
 public slots:
     void deleteSocket(myTcpSocket* mySocket);
 private:

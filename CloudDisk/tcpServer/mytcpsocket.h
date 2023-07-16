@@ -33,6 +33,10 @@ public slots:
 
     void handleDelFriend(PDU* pdu);
 
+    void handlePrivateChat(PDU* pdu);
+
+    void requestFault(PDU* pdu);
+
 //    void handleGetFOnlineStatus(PDU * pdu);
 //    void logout();
 signals:
