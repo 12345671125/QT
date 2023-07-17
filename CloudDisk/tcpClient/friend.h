@@ -27,6 +27,8 @@ public:
     void showAllOnlineUser(PDU* pdu);
     void showSearchUser(PDU* pdu);
     void updateFriend(PDU* pdu);
+    void showPublicChat(PDU *pdu);
+
 
 signals:
 public slots:
@@ -35,6 +37,7 @@ public slots:
     void flushFriends(); //刷新好友列表
     void deleteFriend(); //删除好友
     void privateChat(); //私聊
+    void publicChat(); //群聊
 private:
     QTextEdit* m_pShowMsgTE;
     QListWidget* m_pFriendListWidget;

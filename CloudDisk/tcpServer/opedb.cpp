@@ -143,7 +143,8 @@ QStringList OpeDB::handleFlushFriends(const char* userName)
     int userid = this->getId(userName);
 //     qDebug()<<userName;
     //qDebug()<<userid;
-    QString data = QString("select friend.friendId,userInfo.online from friend,userInfo where friend.id = %1 and friend.id = userInfo.id").arg(userid);
+    QString data = QString("select friend.friendId,userInfo.online from friend,userInfo where friend.id = %1 "
+                           "and friend.id = userInfo.id").arg(userid);
     QSqlQuery query;
     query.exec(data);
     //qDebug()<<query.next();
@@ -151,7 +152,8 @@ QStringList OpeDB::handleFlushFriends(const char* userName)
         int ret = query.value(0).toInt();
         resultList.push_back(this->getUserName(ret).append(":" + query.value(1).toString()));
     }
-    data = QString("select friend.id,userInfo.online from friend,userInfo where friend.id = userInfo.id and friend.friendId = %1").arg(userid);
+    data = QString("select friend.id,userInfo.online from friend,userInfo where friend.id = userInfo.id and"
+                   " friend.friendId = %1").arg(userid);
     query.exec(data);
     while(query.next()){
         int ret = query.value(0).toInt();
@@ -174,6 +176,33 @@ void OpeDB::handleDelFriend(const char *username, const char *pername)
     QSqlQuery query;
     query.exec(data);
 
+}
+
+QStringList OpeDB::handleGetOnlineFriend(const char *userName)
+{
+    QStringList resultList;
+    resultList.clear();
+    if(userName == nullptr) return resultList;
+    int userid = this->getId(userName);
+    //qDebug()<<userName;
+    //qDebug()<<userid;
+    QString data = QString("select friend.friendId from friend,userInfo where friend.id = %1 and friend.id = userInfo.id and userInfo.online = 1").arg(userid); //从数据库中获取用户好友id
+
+    QSqlQuery query;
+    query.exec(data);
+    while(query.next()){        //通过用户id获取用户名
+        int ret = query.value(0).toInt();
+        resultList.push_back(this->getUserName(ret));
+    }
+    data = QString("select friend.id from friend,userInfo where friend.friendId = %1 and friend.friendId = userInfo.id and userInfo.online = 1").arg(userid); //从数据库中获取用户好友id
+
+    query.exec(data);
+    while(query.next()){       //通过用户id获取用户名
+        int ret = query.value(0).toInt();
+        resultList.push_back(this->getUserName(ret)); //将获取到的用户名添加到string
+    }
+
+    return resultList;
 }
 
 //QStringList OpeDB::handleGetFOnlineStatus(const char *username)

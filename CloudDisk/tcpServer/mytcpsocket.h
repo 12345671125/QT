@@ -14,11 +14,6 @@ class myTcpSocket : public QTcpSocket
 public:
     myTcpSocket();
     QString getName();
-public slots:
-    void recvMsg();//用于处理请求
-    void regist(PDU* pdu);//用于处理注册
-    void clientOffine();
-//    void respond(PDU* pdu); //用于回复
     void login(PDU* pdu);
 
     void showOnline(PDU* pdu);
@@ -36,6 +31,13 @@ public slots:
     void handlePrivateChat(PDU* pdu);
 
     void requestFault(PDU* pdu);
+
+    void handlePublicChat(PDU* pdu);
+public slots:
+    void recvMsg();//用于处理请求
+    void regist(PDU* pdu);//用于处理注册
+    void clientOffine();
+//    void respond(PDU* pdu); //用于回复
 
 //    void handleGetFOnlineStatus(PDU * pdu);
 //    void logout();

@@ -26,6 +26,7 @@ public:
     int handleAddFriend(const char* pername,const char* name,int type = 0);//用于添加好友
     QStringList handleFlushFriends(const char* userName);//用于刷新好友
     void handleDelFriend(const char* username,const char* pername); //用于删除好友
+    QStringList handleGetOnlineFriend(const char* userName); //获取在线好友
 //    QStringList handleGetFOnlineStatus(const char* username); //用于刷新好友状态
     ~OpeDB();
 signals:

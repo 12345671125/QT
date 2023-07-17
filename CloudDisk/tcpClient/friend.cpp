@@ -8,6 +8,7 @@
 Friend::Friend(QWidget *parent) : QWidget(parent)
 {
     this->m_pShowMsgTE = new QTextEdit(this);
+    this->m_pShowMsgTE->setReadOnly(true);
     this->m_pFriendListWidget = new QListWidget;
     this->m_pInputMsgLE = new QLineEdit;
 
@@ -44,6 +45,10 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     setLayout(pMain);
 
     this->flushFriends();
+//    this->m_pPrivateChatPB->setDisabled(true);
+//    if(this->m_pFriendListWidget->count()>0){
+//        this->m_pFriendListWidget->setCurrentItem(0);
+//    }
 
 /*设置刷新好友定时器*/
     this->m_Timer = new QTimer(this);
@@ -58,6 +63,8 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
 
     QObject::connect(m_pDelFriendPB,SIGNAL(clicked(bool)),this,SLOT(deleteFriend()));
     QObject::connect(m_pPrivateChatPB,SIGNAL(clicked(bool)),this,SLOT(privateChat()));
+
+    QObject::connect(m_pMsgSendPB,SIGNAL(clicked(bool)),this,SLOT(publicChat())); //群聊
 
 
 }
@@ -105,6 +112,21 @@ void Friend::updateFriend(PDU *pdu)
         }
 //        qDebug()<<caName;
     }
+}
+
+
+void Friend::showPublicChat(PDU *pdu)
+{
+    qDebug()<<"showPublicChat";
+    if(pdu == nullptr) return;
+    QString data;
+    data.clear();
+    char username[64] = {"\0"};
+    memcpy(username,pdu->caData,64);
+    data = QString::fromLocal8Bit(username,64);
+    data.append(" : ").append(QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen)).append("\r\n");
+    this->m_pShowMsgTE->append(data);
+
 }
 
 void Friend::showOnline()
@@ -156,10 +178,40 @@ void Friend::deleteFriend()
 
 void Friend::privateChat()
 {
-
+    if(!this->m_pFriendListWidget->currentItem() || this->m_pFriendListWidget->count() == 0){
+        return;
+    }
     PrivateChat::getInstance().setChatName(this->m_pFriendListWidget->currentItem()->text());
 //    qDebug()<<this->m_pFriendListWidget->currentItem()->text();
     PrivateChat::getInstance().show();
+}
+
+void Friend::publicChat()
+{
+    QString msg = this->m_pInputMsgLE->text();//获取文本框输入内容
+    if(!msg.isEmpty()){
+        QString data;
+        data.clear();
+        data = clientWin::getInstance().getLoginName();
+        data.append(" : ").append(msg).append("\r\n");
+        this->m_pShowMsgTE->append(data);
+        this->m_pInputMsgLE->clear();
+        PDU*pdu = createPDU(msg.length());/*生成协议*/
+        memcpy(pdu->caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
+        pdu->uiMsgType = ENUM_MSG_TYPE_PUBLIC_CHAT_REQUEST;
+//        QByteArray Bdata = data.toUtf8();
+        memcpy((char*)pdu->caMsg,msg.toStdString().c_str(),msg.length());
+        /*通过socket发送协议*/
+        clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->uiPDULen);
+        free(pdu);
+        pdu = nullptr;
+    }else{
+        QMessageBox::critical(this,"error","发送的内容不能为空!");
+        return;
+    }
+
+
+
 }
 
 //void Friend::getFOnlineStatus()

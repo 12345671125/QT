@@ -7,6 +7,7 @@ myTcpSocket::myTcpSocket()
 {
     QObject::connect(this,SIGNAL(readyRead()),this,SLOT(recvMsg()));
     QObject::connect(this,SIGNAL(disconnected()),this,SLOT(clientOffine()));
+    this->setSocketOption(QTcpSocket::KeepAliveOption,true);
 }
 
 QString myTcpSocket::getName()
@@ -66,8 +67,9 @@ void myTcpSocket::recvMsg()
         this->handlePrivateChat(pdu);
         break;
 
-
-
+        case ENUM_MSG_TYPE_PUBLIC_CHAT_REQUEST:
+        this->handlePublicChat(pdu);
+        break;
 
 
 
@@ -255,6 +257,21 @@ void myTcpSocket::requestFault(PDU *pdu)
 {
     PDU requestPdu = PDU::default_respond(ENUM_MSG_TYPE_ERROR_RESPOND,"REQUESTFAULT!");
     this->write((char*)&requestPdu,requestPdu.uiPDULen);
+}
+
+void myTcpSocket::handlePublicChat(PDU *pdu)
+{
+    if(pdu == nullptr) return;
+    char username[64] = {"\0"};
+    memcpy(username,pdu->caData,64);
+    QStringList resultList = OpeDB::getInsance().handleGetOnlineFriend(username);
+    if(resultList.isEmpty()){
+        QMessageBox::critical(NULL,"error","查询好友错误",QMessageBox::Ok);
+        return;
+    }
+    myTcpServer::getInstance().MsgResend(resultList,pdu);
+
+
 }
 
 

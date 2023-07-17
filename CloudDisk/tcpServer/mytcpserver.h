@@ -17,6 +17,7 @@ public:
     void incomingConnection(qintptr handle);
     void FResend(const char* pername,PDU *pdu);
     void MsgResend(const char* pername,PDU* pdu);
+    void MsgResend(const QStringList strList,PDU* pdu);
 public slots:
     void deleteSocket(myTcpSocket* mySocket);
 private:

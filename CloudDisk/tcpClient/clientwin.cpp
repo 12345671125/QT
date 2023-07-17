@@ -11,6 +11,7 @@ clientWin::clientWin(QWidget *parent)
     ui->setupUi(this);
     initconfig(); //初始化配置
     connectToServer();
+    this->clientSocket.setSocketOption(QTcpSocket::KeepAliveOption,true);
     QObject::connect(&this->clientSocket,SIGNAL(connected()),this,SLOT(showConnected()));
     QObject::connect(&this->clientSocket,SIGNAL(readyRead()),this,SLOT(recvMsg()));
 }
@@ -150,7 +151,11 @@ void clientWin::recvMsg()
         break;
     }
 
-
+    case ENUM_MSG_TYPE_PUBLIC_CHAT_TRANSMIT:
+    {
+        this->showPublicMsg(pdu);
+        break;
+    }
 
 
 
@@ -159,8 +164,6 @@ void clientWin::recvMsg()
         QMessageBox::critical(this,"ERROR","请求错误!,请联系管理员");
         break;
     }
-
-
     default: break;
   }
 }
@@ -192,17 +195,22 @@ void clientWin::on_login_clicked()
     if(!this->ui->usernameInput->text().isEmpty() && !this->ui->passwordInput->text().isEmpty()){
         QString username = this->ui->usernameInput->text();
         QString password = this->ui->passwordInput->text();
-        QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
-        password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
-//        qDebug()<<password;
-        PDU* pdu = createPDU(0);
-        pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
-        strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
-        strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
-        this->clientSocket.write((char*)pdu, pdu->uiPDULen);
-        this->m_strLoginName = username; //将用户名保存
-        free(pdu);
-        pdu = nullptr;
+        if(username.length() > 20 || password.length()>20){
+            QMessageBox::information(this,"命名规则","用户名和密码的长度不能超过20个字符!");
+        }else{
+            QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
+            password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
+            //        qDebug()<<password;
+            PDU* pdu = createPDU(0);
+            pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
+            strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
+            strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
+            this->clientSocket.write((char*)pdu, pdu->uiPDULen);
+            this->m_strLoginName = username; //将用户名保存
+            free(pdu);
+            pdu = nullptr;
+        }
+
     }else{
         QMessageBox::critical(this,"ERROR","用户名或密码不能为空!");
     }
@@ -213,6 +221,9 @@ void clientWin::on_regist_clicked()
     if(!this->ui->usernameInput->text().isEmpty() && !this->ui->passwordInput->text().isEmpty()){
         QString username = this->ui->usernameInput->text();
         QString password = this->ui->passwordInput->text();
+        if(username.length() > 20 || password.length()>20){
+            QMessageBox::information(this,"命名规则","用户名和密码的长度不能超过20个字符!");
+        }else{
         QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
         password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
 //        qDebug()<<password;
@@ -223,6 +234,7 @@ void clientWin::on_regist_clicked()
         this->clientSocket.write((char*)pdu, pdu->uiPDULen);
         free(pdu);
         pdu = nullptr;
+        }
     }else{
         QMessageBox::critical(this,"ERROR","用户名或密码不能为空!");
     }
@@ -240,7 +252,8 @@ void clientWin::showPrivateMsg(PDU *pdu)
     if(!PrivateChat::getInstance().isHidden()||!PrivateChat::getInstance().isActiveWindow() || !PrivateChat::getInstance().isVisible()){
         int result =  QMessageBox::information(this,"新消息","你有一条来自"+uname+"的新消息,是否打开聊天框？",QMessageBox::Yes,QMessageBox::No);
         if(result == QMessageBox::Yes){
-            PrivateChat::getInstance().setChatName(uname);
+            PrivateChat::getInstance().setChatName(uname.append("     "));//向后填充5个空格
+            qDebug()<<uname;
             PrivateChat::getInstance().show();
             PrivateChat::getInstance().showMsg(pdu);
 
@@ -249,6 +262,12 @@ void clientWin::showPrivateMsg(PDU *pdu)
         PrivateChat::getInstance().showMsg(pdu);
     }
 
+}
+
+void clientWin::showPublicMsg(PDU *pdu)
+{
+    qDebug()<<"showPublicMsg";
+    OpeWidget::getinstance().getFriend()->showPublicChat(pdu);
 }
 
 void clientWin::on_logout_clicked()

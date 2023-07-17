@@ -51,7 +51,7 @@ void PrivateChat::showMsg(PDU* pdu)
         msg.append("  ");
         msg.append(QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen));
         msg.append("\r\n\r\n");
-        ui->textEdit->insertPlainText(msg);
+        ui->textEdit->append(msg);
 }
 
 void PrivateChat::on_sendPtn_clicked()
@@ -81,6 +81,6 @@ void PrivateChat::on_sendPtn_clicked()
     msg.append("  ");
     msg.append(strMsg);
     msg.append("\r\n\r\n");
-    ui->textEdit->insertPlainText(msg);
+    ui->textEdit->append(msg);
 }
 
