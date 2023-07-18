@@ -99,6 +99,7 @@ void Friend::updateFriend(PDU *pdu)
     for(uint i = 0;i<uiSize;i++){
         memcpy(caName,((char*)pdu->caMsg)+(i*64),64);
         QString str = QString::fromLocal8Bit(caName,64);
+        qDebug()<<str;
         QChar status = str.at(str.length()-1);
         str  = str.mid(0,str.length()-2);
         if(status == '1'){
@@ -162,7 +163,7 @@ void Friend::flushFriends()
 void Friend::deleteFriend()
 {
     QString curName = OpeWidget::getinstance().getFriend()->m_pFriendListWidget->currentItem()->text(); //获取当前选中的好友用户名
-
+    curName = curName.mid(0,curName.length()-5);
     if(QMessageBox::information(this,"删除好友","确定要删除好友"+curName+"?",QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes){
     /*向服务器发送删除好友请求*/
     PDU pdu = PDU::default_request(ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,"");

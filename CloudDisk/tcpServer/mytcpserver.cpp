@@ -27,10 +27,12 @@ void myTcpServer::incomingConnection(qintptr handle)  /*当服务器端监听到
 
 void myTcpServer::FResend(const char *pername, PDU *pdu)
 {
+    qDebug()<<"FResend";
     if(pername == NULL || pdu == NULL){
         return;
     }
-    QString strName = QString::fromLocal8Bit(pername,64);
+    QString strName = pername;
+    qDebug()<<strName;
     for(int i = 0;i<this->socketList.length();i++){
         if(this->socketList.at(i)->getName() == strName){
             this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen); //通过登陆时传过来的username,将好友请求转发给对应用户
@@ -43,7 +45,7 @@ void myTcpServer::MsgResend(const char *pername, PDU *pdu)
 {
     if(pername == NULL || pdu == NULL)
         return;
-    QString strName = QString::fromLocal8Bit(pername,64);
+    QString strName = pername;
 //    qDebug()<<strName;
     for(int i = 0;i<this->socketList.length();i++){
 //        qDebug()<<"MSGRESEND_for";

@@ -3,12 +3,13 @@
 OpeWidget::OpeWidget(QWidget *parent) : QWidget(parent)
 {
     this->m_pListW = new QListWidget(this);
-    this->m_pListW->addItem("好友");
-//    this->m_pListW->addItem("图书");
-    m_pFriend = new Friend;
-
+    this->m_pListW->addItem("好友界面");
+    this->m_pListW->addItem("文件界面");
+    this->m_pFriend = new Friend;
+    this->m_pFilePage = new FilePage(this);
     m_pSW  = new QStackedWidget;
     m_pSW->addWidget(m_pFriend);
+    m_pSW->addWidget(m_pFilePage);
     QHBoxLayout* pMain = new QHBoxLayout;
     pMain->addWidget(m_pListW);
     pMain->addWidget(m_pSW);

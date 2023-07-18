@@ -92,6 +92,7 @@ void clientWin::recvMsg()
     {
         qDebug() << pdu->caData;
         if(strcmp(pdu->caData,LOGIN_OK) == 0){
+            m_strCurPath = QString("./%1").arg(m_strLoginName);
             QMessageBox::information(this,"登录","LOGIN_OK");
             this->setWindowTitle("当前用户:"+this->m_strLoginName);
             OpeWidget::getinstance().show();
@@ -157,7 +158,11 @@ void clientWin::recvMsg()
         break;
     }
 
-
+    case ENUM_MSG_TYPE_CREATE_DIR_RESPOND:
+    {
+        this->showCreateDir(pdu);
+        break;
+    }
 
         case ENUM_MSG_TYPE_ERROR_RESPOND:
     {
@@ -270,8 +275,18 @@ void clientWin::showPublicMsg(PDU *pdu)
     OpeWidget::getinstance().getFriend()->showPublicChat(pdu);
 }
 
+void clientWin::showCreateDir(PDU *pdu)
+{
+    QMessageBox::information(this,"创建文件夹",pdu->caData);
+}
+
 void clientWin::on_logout_clicked()
 {
 
+}
+
+QString clientWin::curPath()
+{
+    return this->m_strCurPath;
 }
 

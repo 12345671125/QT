@@ -143,8 +143,7 @@ QStringList OpeDB::handleFlushFriends(const char* userName)
     int userid = this->getId(userName);
 //     qDebug()<<userName;
     //qDebug()<<userid;
-    QString data = QString("select friend.friendId,userInfo.online from friend,userInfo where friend.id = %1 "
-                           "and friend.id = userInfo.id").arg(userid);
+    QString data = QString("select id,online from userInfo where id in (select friendId from friend,userInfo where friend.id = %1 and friend.id = userInfo.id)").arg(userid);
     QSqlQuery query;
     query.exec(data);
     //qDebug()<<query.next();
@@ -152,8 +151,7 @@ QStringList OpeDB::handleFlushFriends(const char* userName)
         int ret = query.value(0).toInt();
         resultList.push_back(this->getUserName(ret).append(":" + query.value(1).toString()));
     }
-    data = QString("select friend.id,userInfo.online from friend,userInfo where friend.id = userInfo.id and"
-                   " friend.friendId = %1").arg(userid);
+    data = QString("select id,online from userInfo where id in (select friend.id from friend,userInfo where friend.id = userInfo.id and friend.friendId = %1)").arg(userid);
     query.exec(data);
     while(query.next()){
         int ret = query.value(0).toInt();
@@ -169,8 +167,8 @@ void OpeDB::handleDelFriend(const char *username, const char *pername)
     if(username == nullptr || pername == nullptr) return;
     int perId = getId(pername);
     int userId = getId(username);
-//    qDebug()<<pername;
-//    qDebug()<<username;
+    qDebug()<<pername;
+    qDebug()<<username;
     QString data = QString("delete from friend where (id = %1 and friendId = %2) or (id = %3 and friendId = %4)").arg(perId).arg(userId).arg(userId).arg(perId);
     qDebug()<<data;
     QSqlQuery query;

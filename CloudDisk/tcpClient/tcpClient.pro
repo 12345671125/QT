@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    filepage.cpp \
     friend.cpp \
     main.cpp \
     clientwin.cpp \
@@ -26,6 +27,7 @@ SOURCES += \
 
 HEADERS += \
     clientwin.h \
+    filepage.h \
     friend.h \
     online.h \
     opewidget.h \

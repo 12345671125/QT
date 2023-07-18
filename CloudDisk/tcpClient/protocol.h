@@ -15,6 +15,8 @@ typedef unsigned int uint;
 #define LOGIN_OK "login ok"
 #define LOGIN_FAILED "login failed : name or pwd error or relogin"
 
+#define DIR_NOT_EXIST  "current dir not exist"
+#define FILE_NAME_EXIT "file name exist"
 enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_MIN = 0,
     ENUM_MSG_TYPE_REGIST_REQUEST, //注册请求
@@ -52,8 +54,8 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_FONLINE_STATUS_REQUEST, //查询好友是否在线请求
     ENUM_MSG_TYPE_FONLINE_STATUS_RESPOND, //查询好友是否在线回复
 
-    //    ENUM_MSG_TYPE,
-    //    ENUM_MSG_TYPE,
+    ENUM_MSG_TYPE_CREATE_DIR_REQUEST, //创建文件夹请求
+    ENUM_MSG_TYPE_CREATE_DIR_RESPOND, //创建文件夹响应
 
     //    ENUM_MSG_TYPE,
     //    ENUM_MSG_TYPE,

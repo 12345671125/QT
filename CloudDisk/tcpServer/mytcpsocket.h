@@ -33,6 +33,8 @@ public:
     void requestFault(PDU* pdu);
 
     void handlePublicChat(PDU* pdu);
+
+    void handleCreateDir(PDU* pdu);
 public slots:
     void recvMsg();//用于处理请求
     void regist(PDU* pdu);//用于处理注册

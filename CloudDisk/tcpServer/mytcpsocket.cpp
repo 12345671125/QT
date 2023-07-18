@@ -2,6 +2,7 @@
 #pragma execution_character_set("utf-8")
 #include "mytcpsocket.h"
 #include"mytcpserver.h"
+#include <QDir>
 
 myTcpSocket::myTcpSocket()
 {
@@ -72,7 +73,9 @@ void myTcpSocket::recvMsg()
         break;
 
 
-
+        case ENUM_MSG_TYPE_CREATE_DIR_REQUEST:
+        this->handleCreateDir(pdu);
+        break;
 
         default:
         this->requestFault(pdu);
@@ -93,6 +96,11 @@ void myTcpSocket::regist(PDU* pdu)
             PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_REGIST_RESPOND,REGIST_OK);
             qDebug() << pdu.caData;
             this->write((char*)&pdu,pdu.uiPDULen);
+            QDir dir;
+            if(dir.mkdir(QString("./%1").arg(username)))
+                qDebug()<<"mkdir true";
+            else
+                qDebug()<<"mkdir false";
         }
         else   //如果写入失败
         {
@@ -272,6 +280,39 @@ void myTcpSocket::handlePublicChat(PDU *pdu)
     myTcpServer::getInstance().MsgResend(resultList,pdu);
 
 
+}
+
+void myTcpSocket::handleCreateDir(PDU *pdu)
+{
+    QDir dir;
+    QString strCurPath = QString("%1").arg((char*)(pdu->caMsg));
+    bool ret = dir.exists(strCurPath);
+    qDebug()<<strCurPath;
+    if(ret){     //当前目录存在
+        char caNewDir[64] = {"\0"};
+        memcpy(caNewDir,pdu->caData+64,64);
+        QString strNewPath = strCurPath + "/" + caNewDir;
+        qDebug() << strNewPath;
+        ret = dir.exists(strNewPath);
+        qDebug() << ret;
+        if(ret)  //创建的文件名已存在
+        {
+                PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_CREATE_DIR_RESPOND,FILE_NAME_EXIT);
+                this->write((char*)&pdu,pdu.uiPDULen);
+        }
+        else  //创建的文件名不存在
+        {
+                dir.mkdir(strNewPath);
+                PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_CREATE_DIR_RESPOND,CREATE_DIR_SUCESS);
+                this->write((char*)&pdu,pdu.uiPDULen);
+
+        }
+    }
+    else
+    {       //当前目录不存在
+        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_CREATE_DIR_RESPOND,DIR_NOT_EXIST);
+        this->write((char*)&pdu,pdu.uiPDULen);
+    }
 }
 
 
