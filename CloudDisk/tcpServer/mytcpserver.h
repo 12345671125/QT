@@ -15,9 +15,9 @@ public:
 
     static myTcpServer& getInstance(); //单例模式
     void incomingConnection(qintptr handle);
-    void FResend(const char* pername,PDU *pdu);
-    void MsgResend(const char* pername,PDU* pdu);
-    void MsgResend(const QStringList strList,PDU* pdu);
+    void FResend(const char* pername,protocol::PDU *pdu);
+    void MsgResend(const char* pername,protocol::PDU* pdu);
+    void MsgResend(const QStringList strList,protocol::PDU* pdu);
 public slots:
     void deleteSocket(myTcpSocket* mySocket);
 private:

@@ -17,8 +17,8 @@ class Online : public QWidget
 public:
     explicit Online(QWidget *parent = nullptr);
     ~Online();
-    void showUser(PDU* pdu);
-    void showSearchUser(PDU* pdu);
+    void showUser(protocol::PDU* pdu);
+    void showSearchUser(protocol::PDU* pdu);
 
 private slots:
     void on_addFriendButton_clicked();

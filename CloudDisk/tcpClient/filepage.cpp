@@ -1,7 +1,6 @@
 #include "filepage.h"
 #include "clientwin.h"
 #include "QInputDialog"
-
 FilePage::FilePage(QWidget *parent)
     : QWidget(parent)
 {
@@ -38,6 +37,7 @@ FilePage::FilePage(QWidget *parent)
     setLayout(pMain);
 
     connect(m_pCreateDirPB,SIGNAL(clicked(bool)),this,SLOT(createDir()));
+    connect(m_pFlushFilePB,SIGNAL(clicked(bool)),this,SLOT(flushFile()));
 }
 
 void FilePage::createDir()
@@ -50,12 +50,12 @@ void FilePage::createDir()
             QString strName = clientWin::getInstance().getLoginName();
             QString strCurPath = clientWin::getInstance().curPath();
             qDebug()<<"curPath:"<<strCurPath;
-            PDU* pdu = createPDU(strCurPath.length()+1);
-            pdu->uiMsgType = ENUM_MSG_TYPE_CREATE_DIR_REQUEST;
+            protocol::PDU* pdu = protocol::createPDU(strCurPath.length()+1);
+            pdu->uiMsgType = protocol::ENUM_MSG_TYPE_CREATE_DIR_REQUEST;
             strncpy(pdu->caData,strName.toStdString().c_str(),strName.size());
             strncpy((char*)pdu->caMsg,strCurPath.toStdString().c_str(),strCurPath.size());
             memcpy(pdu->caData+64,strNewDir.toStdString().c_str(),strNewDir.size());
-            clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->uiPDULen);
+            clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
             free(pdu);
             pdu = nullptr;
         }
@@ -64,4 +64,15 @@ void FilePage::createDir()
         QMessageBox::warning(this,"新建文件夹","新文件夹名字不能为空！");
     }
 
+}
+
+void FilePage::flushFile()
+{
+    QString CurPath = clientWin::getInstance().curPath();
+    protocol::PDU* pdu = protocol::createPDU(CurPath.size() + 1);
+    pdu->uiMsgType = protocol::ENUM_MSG_TYPE_FLUSH_FILE_REQUEST;
+    memcpy((char*)pdu->caMsg,CurPath.toStdString().c_str(),CurPath.size());
+    clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
+    free(pdu);
+    pdu = nullptr;
 }

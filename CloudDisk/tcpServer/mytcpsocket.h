@@ -7,6 +7,7 @@
 #include <QDebug>
 #include "protocol.h"
 #include "opedb.h"
+#include <QFileInfoList>
 
 class myTcpSocket : public QTcpSocket
 {
@@ -14,30 +15,32 @@ class myTcpSocket : public QTcpSocket
 public:
     myTcpSocket();
     QString getName();
-    void login(PDU* pdu);
+    void login(protocol::PDU* pdu);
 
-    void showOnline(PDU* pdu);
+    void showOnline(protocol::PDU* pdu);
 
-    void searchUser(PDU* pdu);
+    void searchUser(protocol::PDU* pdu);
 
-    void addFriends(PDU* pdu);
+    void addFriends(protocol::PDU* pdu);
 
-    void handleFriRespond(PDU* pdu,int type);
+    void handleFriRespond(protocol::PDU* pdu,int type);
 
-    void handleFlushFriends(PDU* pdu);
+    void handleFlushFriends(protocol::PDU* pdu);
 
-    void handleDelFriend(PDU* pdu);
+    void handleDelFriend(protocol::PDU* pdu);
 
-    void handlePrivateChat(PDU* pdu);
+    void handlePrivateChat(protocol::PDU* pdu);
 
-    void requestFault(PDU* pdu);
+    void requestFault(protocol::PDU* pdu);
 
-    void handlePublicChat(PDU* pdu);
+    void handlePublicChat(protocol::PDU* pdu);
 
-    void handleCreateDir(PDU* pdu);
+    void handleCreateDir(protocol::PDU* pdu);
+
+    void handleFlushFile(protocol::PDU* pdu);
 public slots:
     void recvMsg();//用于处理请求
-    void regist(PDU* pdu);//用于处理注册
+    void regist(protocol::PDU* pdu);//用于处理注册
     void clientOffine();
 //    void respond(PDU* pdu); //用于回复
 

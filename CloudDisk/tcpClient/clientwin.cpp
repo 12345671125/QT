@@ -69,15 +69,15 @@ void clientWin::showConnected(){
 
 void clientWin::recvMsg()
 {
-    uint uiPDULen = 0;
-    this->clientSocket.read((char*)&uiPDULen,sizeof(uint)); //para1:数据存放的地址，para2:读出的数据大小，读出uint字节的大小，这个uint为总的数据大小
-    uint uiMsgLen = uiPDULen - sizeof(PDU); //用总的数据大小减去PDU结构体的默认，获取实际消息长度
-    PDU* pdu = createPDU(uiMsgLen); //创建协议结构体，用于接收数据
-    this->clientSocket.read((char*)pdu + sizeof (uint),uiPDULen-sizeof (uint)); /*让指针偏移来读取剩下的数据大小,先将pdu的指针类型转换为了char类型的指针，
+    uint PDULen = 0;
+    this->clientSocket.read((char*)&PDULen,sizeof(uint)); //para1:数据存放的地址，para2:读出的数据大小，读出uint字节的大小，这个uint为总的数据大小
+    uint uiMsgLen = PDULen - sizeof(protocol::PDU); //用总的数据大小减去protocol::PDU结构体的默认，获取实际消息长度
+    protocol::PDU* pdu = protocol::createPDU(uiMsgLen); //创建协议结构体，用于接收数据
+    this->clientSocket.read((char*)pdu + sizeof (uint),PDULen-sizeof (uint)); /*让指针偏移来读取剩下的数据大小,先将pdu的指针类型转换为了char类型的指针，
 那么当指针指针加一的时候会向后偏移一个字节的大小*/
     switch (pdu->uiMsgType)
     {
-        case ENUM_MSG_TYPE_REGIST_RESPOND:
+    case protocol::ENUM_MSG_TYPE_REGIST_RESPOND:
     {
         qDebug() << pdu->caData;
         if(strcmp(pdu->caData,REGIST_OK) == 0){
@@ -88,7 +88,7 @@ void clientWin::recvMsg()
         }
         break;
     }
-        case ENUM_MSG_TYPE_LOGIN_RESPOND:
+    case protocol::ENUM_MSG_TYPE_LOGIN_RESPOND:
     {
         qDebug() << pdu->caData;
         if(strcmp(pdu->caData,LOGIN_OK) == 0){
@@ -104,18 +104,18 @@ void clientWin::recvMsg()
         }
         break;
     }
-        case ENUM_MSG_TYPE_ALL_ONLINE_RESPOND:
+    case protocol::ENUM_MSG_TYPE_ALL_ONLINE_RESPOND:
     {
 
         OpeWidget::getinstance().getFriend()->showAllOnlineUser(pdu);
         break;
     }
-        case ENUM_MSG_TYPE_SEARCHUSER_RESPOND:
+    case protocol::ENUM_MSG_TYPE_SEARCHUSER_RESPOND:
     {
         OpeWidget::getinstance().getFriend()->showSearchUser(pdu);
         break;
     }
-        case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
+    case protocol::ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
     {
         char username[64] = {"\n"}; //创建username数组用于存放用户名
         memset(username,0,sizeof(username));
@@ -123,48 +123,54 @@ void clientWin::recvMsg()
         int ret = QMessageBox::information(this,"好友请求",QString("%1 想要添加你为好友").arg(username),QMessageBox::Yes,QMessageBox::No);
         if(ret == QMessageBox::Yes)
         {
-            PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ADDFRIEND_AGREE,"0");
+            protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_ADDFRIEND_AGREE,"0");
             memcpy(pdu.caData,username,64);
             memcpy(pdu.caData+64,this->m_strLoginName.toStdString().c_str(),64);
-            this->clientSocket.write((char*)&pdu,pdu.uiPDULen);
+            this->clientSocket.write((char*)&pdu,pdu.PDULen);
         }else
         {
-            PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ADDFRIEND_REFUSE,this->getLoginName()+username);
-            this->clientSocket.write((char*)&pdu,pdu.uiPDULen);
+            protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_ADDFRIEND_REFUSE,this->getLoginName()+username);
+            this->clientSocket.write((char*)&pdu,pdu.PDULen);
         }
         break;
     }
-        case ENUM_MSG_TYPE_ADDFRIEND_RESPOND:
+    case protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND:
     {
         QMessageBox::information(this,"添加好友",pdu->caData);
         break;
     }
-        case ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:
+    case protocol::ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND:
     {
         OpeWidget::getinstance().getFriend()->updateFriend(pdu);
         break;
     }
 
 
-    case ENUM_MSG_TYPE_PRIVATE_CHAT_TRANSMIT:
+    case protocol::ENUM_MSG_TYPE_PRIVATE_CHAT_TRANSMIT:
     {
         this->showPrivateMsg(pdu);
         break;
     }
 
-    case ENUM_MSG_TYPE_PUBLIC_CHAT_TRANSMIT:
+    case protocol::ENUM_MSG_TYPE_PUBLIC_CHAT_TRANSMIT:
     {
         this->showPublicMsg(pdu);
         break;
     }
 
-    case ENUM_MSG_TYPE_CREATE_DIR_RESPOND:
+    case protocol::ENUM_MSG_TYPE_CREATE_DIR_RESPOND:
     {
         this->showCreateDir(pdu);
         break;
     }
 
-        case ENUM_MSG_TYPE_ERROR_RESPOND:
+    case protocol::ENUM_MSG_TYPE_FLUSH_FILE_RESPOND:
+    {
+        this->flushFile(pdu);
+        break;
+    }
+
+    case protocol::ENUM_MSG_TYPE_ERROR_RESPOND:
     {
         QMessageBox::critical(this,"ERROR","请求错误!,请联系管理员");
         break;
@@ -183,10 +189,10 @@ clientWin::~clientWin()
 //{
 //    QString strMsg = this->ui->msgInput->text();
 //    if(!strMsg.isEmpty()){
-//            PDU *pdu = createPDU(strMsg.size()+1);
+//            protocol::PDU *pdu = createprotocol::PDU(strMsg.size()+1);
 //            pdu->uiMsgType = _msgText_;
 //            memcpy(pdu->caMsg,strMsg.toStdString().c_str(),strMsg.size());
-//            this->clientSocket.write((char*) pdu, pdu->uiPDULen);
+//            this->clientSocket.write((char*) pdu, pdu->uiprotocol::PDULen);
 //            free(pdu);
 //            pdu = nullptr;
 //    }else{
@@ -206,11 +212,11 @@ void clientWin::on_login_clicked()
             QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
             password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
             //        qDebug()<<password;
-            PDU* pdu = createPDU(0);
-            pdu->uiMsgType = ENUM_MSG_TYPE_LOGIN_REQUEST;
+            protocol::PDU* pdu =  protocol::createPDU(0);
+            pdu->uiMsgType = protocol::ENUM_MSG_TYPE_LOGIN_REQUEST;
             strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
             strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
-            this->clientSocket.write((char*)pdu, pdu->uiPDULen);
+            this->clientSocket.write((char*)pdu, pdu->PDULen);
             this->m_strLoginName = username; //将用户名保存
             free(pdu);
             pdu = nullptr;
@@ -232,11 +238,11 @@ void clientWin::on_regist_clicked()
         QByteArray bytePwdMd5 = QCryptographicHash::hash(password.toLatin1(),QCryptographicHash::Md5); //使用MD5对密码进行加密
         password = bytePwdMd5.toHex();//将加密后的结果转换为16进制
 //        qDebug()<<password;
-        PDU* pdu = createPDU(0);
-        pdu->uiMsgType = ENUM_MSG_TYPE_REGIST_REQUEST;
+        protocol::PDU* pdu = protocol::createPDU(0);
+        pdu->uiMsgType = protocol::ENUM_MSG_TYPE_REGIST_REQUEST;
         strncpy(pdu->caData,username.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
         strncpy(pdu->caData+64,password.toStdString().c_str(),64); //先将QString 转换成 标准C++字符串 ，再转换为C风格的字符数组
-        this->clientSocket.write((char*)pdu, pdu->uiPDULen);
+        this->clientSocket.write((char*)pdu, pdu->PDULen);
         free(pdu);
         pdu = nullptr;
         }
@@ -246,7 +252,7 @@ void clientWin::on_regist_clicked()
 
 }
 
-void clientWin::showPrivateMsg(PDU *pdu)
+void clientWin::showPrivateMsg(protocol::PDU *pdu)
 {
     qDebug()<<"showPrivateMsg";
     char username[64] = {"\0"};
@@ -269,15 +275,31 @@ void clientWin::showPrivateMsg(PDU *pdu)
 
 }
 
-void clientWin::showPublicMsg(PDU *pdu)
+void clientWin::showPublicMsg(protocol::PDU *pdu)
 {
     qDebug()<<"showPublicMsg";
     OpeWidget::getinstance().getFriend()->showPublicChat(pdu);
 }
 
-void clientWin::showCreateDir(PDU *pdu)
+void clientWin::showCreateDir(protocol::PDU *pdu)
 {
     QMessageBox::information(this,"创建文件夹",pdu->caData);
+}
+
+void clientWin::flushFile(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+
+    protocol::FileInfoList tempInfoList;
+    memcpy((char*)&tempInfoList,(char*)pdu->caMsg,pdu->uiMsgLen);
+    qDebug()<<tempInfoList.FileListLength;
+    qDebug()<<tempInfoList.FileListSize;
+    qDebug()<<tempInfoList.structSize;
+    qDebug()<<tempInfoList.FileList[3].caFileName;
+//    memcpy((char*)&tempInfoList.FileList,(char*)pdu->caMsg+sizeof(protocol::FileInfoList)-sizeof(QVector<protocol::FileInfo>)
+//           ,tempInfoList.FileListSize);
+    //memcpy((char*)&tempInfoList,(char*)resultPdu->caMsg,resultPdu->uiMsgLen);
+
 }
 
 void clientWin::on_logout_clicked()

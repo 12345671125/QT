@@ -17,7 +17,7 @@ public:
     ~PrivateChat();
     void setChatName(QString strName);
     static PrivateChat &getInstance();
-    void showMsg(PDU* pdu = NULL); //显示消息
+    void showMsg(protocol::PDU* pdu = NULL); //显示消息
 
 private slots:
     void on_sendPtn_clicked();

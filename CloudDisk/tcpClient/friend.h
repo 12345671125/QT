@@ -24,10 +24,10 @@ class Friend : public QWidget
 public:
     explicit Friend(QWidget *parent = nullptr);
     ~Friend();
-    void showAllOnlineUser(PDU* pdu);
-    void showSearchUser(PDU* pdu);
-    void updateFriend(PDU* pdu);
-    void showPublicChat(PDU *pdu);
+    void showAllOnlineUser(protocol::PDU* pdu);
+    void showSearchUser(protocol::PDU* pdu);
+    void updateFriend(protocol::PDU* pdu);
+    void showPublicChat(protocol::PDU *pdu);
 
 
 signals:

@@ -14,7 +14,8 @@ public:
     FilePage(QWidget *parent);
 
 public slots:
-    void createDir();
+    void createDir(); //创建文件夹
+    void flushFile(); //刷新文件
 
 private:
     QListWidget* m_pFileListW;
