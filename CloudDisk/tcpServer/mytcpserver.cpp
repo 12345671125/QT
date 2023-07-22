@@ -10,8 +10,8 @@ myTcpServer::myTcpServer()
 
 myTcpServer &myTcpServer::getInstance()
 {
-      static myTcpServer instance;     //创建静态myTcpServer对象 instance
-      return instance;  //返回 静态对象 instance , 因为为静态的所以不管调用多少次都只产生一个
+    static myTcpServer instance;     //创建静态myTcpServer对象 instance
+    return instance;  //返回 静态对象 instance , 因为为静态的所以不管调用多少次都只产生一个
 }
 
 void myTcpServer::incomingConnection(qintptr handle)  /*当服务器端监听到客户端的请求时，会触发incomingConnection函数，
@@ -25,7 +25,7 @@ void myTcpServer::incomingConnection(qintptr handle)  /*当服务器端监听到
     QObject:: connect(socket,SIGNAL(offline(myTcpSocket*)),this,SLOT(deleteSocket(myTcpSocket*)));
 }
 
-void myTcpServer::FResend(const char *pername, PDU *pdu)
+void myTcpServer::FResend(const char *pername, protocol::PDU *pdu)
 {
     qDebug()<<"FResend";
     if(pername == NULL || pdu == NULL){
@@ -35,30 +35,30 @@ void myTcpServer::FResend(const char *pername, PDU *pdu)
     qDebug()<<strName;
     for(int i = 0;i<this->socketList.length();i++){
         if(this->socketList.at(i)->getName() == strName){
-            this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen); //通过登陆时传过来的username,将好友请求转发给对应用户
+            this->socketList.at(i)->write((char*)pdu,pdu->PDULen); //通过登陆时传过来的username,将好友请求转发给对应用户
             break;
         }
     }
 }
 
-void myTcpServer::MsgResend(const char *pername, PDU *pdu)
+void myTcpServer::MsgResend(const char *pername, protocol::PDU *pdu)
 {
     if(pername == NULL || pdu == NULL)
         return;
     QString strName = pername;
-//    qDebug()<<strName;
+    //    qDebug()<<strName;
     for(int i = 0;i<this->socketList.length();i++){
-//        qDebug()<<"MSGRESEND_for";
+        //        qDebug()<<"MSGRESEND_for";
         if(this->socketList.at(i)->getName() == strName){ //如果socket列表中有对应的用户名
-//            qDebug()<<"MSGRESEND_if";
-            pdu->uiMsgType = ENUM_MSG_TYPE_PRIVATE_CHAT_TRANSMIT; //将协议中的请求类型改为消息转发
-            this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen); //转发消息
+            //            qDebug()<<"MSGRESEND_if";
+            pdu->uiMsgType = protocol::ENUM_MSG_TYPE_PRIVATE_CHAT_TRANSMIT; //将协议中的请求类型改为消息转发
+            this->socketList.at(i)->write((char*)pdu,pdu->PDULen); //转发消息
             return;
         }
     }
 }
 
-void myTcpServer::MsgResend(const QStringList strList, PDU *pdu)
+void myTcpServer::MsgResend(const QStringList strList, protocol::PDU *pdu)
 {
     qDebug()<<"MsgResend";
     if(strList.isEmpty()) return;
@@ -66,8 +66,8 @@ void myTcpServer::MsgResend(const QStringList strList, PDU *pdu)
     for(int i = 0;i<this->socketList.length();i++){
         for(int j = 0;j<strList.length();j++){
             if(this->socketList.at(i)->getName() == strList[j]){
-                pdu->uiMsgType = ENUM_MSG_TYPE_PUBLIC_CHAT_TRANSMIT; //将协议中的请求类型改为消息转发
-                this->socketList.at(i)->write((char*)pdu,pdu->uiPDULen);     //进行消息转发
+                pdu->uiMsgType = protocol::ENUM_MSG_TYPE_PUBLIC_CHAT_TRANSMIT; //将协议中的请求类型改为消息转发
+                this->socketList.at(i)->write((char*)pdu,pdu->PDULen);     //进行消息转发
             }
         }
 

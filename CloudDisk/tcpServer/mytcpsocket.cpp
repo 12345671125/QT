@@ -20,61 +20,65 @@ void myTcpSocket::recvMsg()
 {
     uint uiPDULen = 0;
     this->read((char*)&uiPDULen,sizeof(uint)); //para1:数据存放的地址，para2:读出的数据大小，读出uint字节的大小，这个uint为总的数据大小
-    uint uiMsgLen = uiPDULen - sizeof(PDU); //用总的数据大小减去PDU结构体的默认，获取实际消息长度
-    PDU* pdu = createPDU(uiMsgLen); //创建协议结构体，用于接收数据
+    uint uiMsgLen = uiPDULen - sizeof(protocol::PDU); //用总的数据大小减去PDU结构体的默认，获取实际消息长度
+    protocol::PDU* pdu = protocol::createPDU(uiMsgLen); //创建协议结构体，用于接收数据
     this->read((char*)pdu + sizeof (uint),uiPDULen-sizeof (uint)); /*让指针偏移来读取剩下的数据大小,先将pdu的指针类型转换为了char类型的指针，
 那么当指针指针加一的时候会向后偏移一个字节的大小*/
     switch (pdu->uiMsgType)   //通过客户端传过来的协议中的消息类型来进行不同的处理
     {
-        case ENUM_MSG_TYPE_REGIST_REQUEST:
+        case protocol::ENUM_MSG_TYPE_REGIST_REQUEST:
         this->regist(pdu);  //处理注册
         break;
 
-        case ENUM_MSG_TYPE_LOGIN_REQUEST:
+        case protocol::ENUM_MSG_TYPE_LOGIN_REQUEST:
         this->login(pdu); //处理登录
         break;
 
-        case ENUM_MSG_TYPE_ALL_ONLINE_REQUEST:
+        case protocol::ENUM_MSG_TYPE_ALL_ONLINE_REQUEST:
         this->showOnline(pdu); //处理显示在线用户
         break;
 
-        case ENUM_MSG_TYPE_SEARCHUSER_REQUEST:
+        case protocol::ENUM_MSG_TYPE_SEARCHUSER_REQUEST:
         this->searchUser(pdu); //搜索用户
         break;
 
 
-        case ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
+        case protocol::ENUM_MSG_TYPE_ADDFRIEND_REQUEST:
         this->addFriends(pdu); //添加用户
         break;
 
-        case ENUM_MSG_TYPE_ADDFRIEND_AGREE:
-        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_AGREE);//同意添加用户
+        case protocol::ENUM_MSG_TYPE_ADDFRIEND_AGREE:
+        this->handleFriRespond(pdu,protocol::ENUM_MSG_TYPE_ADDFRIEND_AGREE);//同意添加用户
         break;
 
-        case ENUM_MSG_TYPE_ADDFRIEND_REFUSE:
-        this->handleFriRespond(pdu,ENUM_MSG_TYPE_ADDFRIEND_REFUSE); //拒绝添加用户
+        case protocol::ENUM_MSG_TYPE_ADDFRIEND_REFUSE:
+        this->handleFriRespond(pdu,protocol::ENUM_MSG_TYPE_ADDFRIEND_REFUSE); //拒绝添加用户
         break;
 
-        case ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST: //刷新好友
+        case protocol::ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST: //刷新好友
         this->handleFlushFriends(pdu);
         break;
 
-        case ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST: //删除好友
+        case protocol::ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST: //删除好友
         this->handleDelFriend(pdu);
         break;
 
 
-        case ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST: //私聊请求
+        case protocol::ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST: //私聊请求
         this->handlePrivateChat(pdu);
         break;
 
-        case ENUM_MSG_TYPE_PUBLIC_CHAT_REQUEST:
+        case protocol::ENUM_MSG_TYPE_PUBLIC_CHAT_REQUEST:
         this->handlePublicChat(pdu);
         break;
 
 
-        case ENUM_MSG_TYPE_CREATE_DIR_REQUEST:
+        case protocol::ENUM_MSG_TYPE_CREATE_DIR_REQUEST:
         this->handleCreateDir(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_FLUSH_FILE_REQUEST:
+        this->handleFlushFile(pdu);
         break;
 
         default:
@@ -83,7 +87,7 @@ void myTcpSocket::recvMsg()
     }
 }
 
-void myTcpSocket::regist(PDU* pdu)
+void myTcpSocket::regist(protocol::PDU* pdu)
 {
     //    qDebug() << this->bytesAvailable(); //用 bytesAvailable 获取到客户端发送过来的字节数
         char password[64] = {"\n"};
@@ -93,9 +97,9 @@ void myTcpSocket::regist(PDU* pdu)
         bool ret = OpeDB::getInsance().handleRegit(username,password); //尝试将用户名密码写入数据库
         if(ret) //如果写入成功
         {
-            PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_REGIST_RESPOND,REGIST_OK);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_REGIST_RESPOND,REGIST_OK);
             qDebug() << pdu.caData;
-            this->write((char*)&pdu,pdu.uiPDULen);
+            this->write((char*)&pdu,pdu.PDULen);
             QDir dir;
             if(dir.mkdir(QString("./%1").arg(username)))
                 qDebug()<<"mkdir true";
@@ -104,9 +108,9 @@ void myTcpSocket::regist(PDU* pdu)
         }
         else   //如果写入失败
         {
-            PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_REGIST_RESPOND,REGIST_FAILED);
+            protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_REGIST_RESPOND,REGIST_FAILED);
             qDebug() << pdu.caData;
-            this->write((char*)&pdu,pdu.uiPDULen);
+            this->write((char*)&pdu,pdu.PDULen);
         }
 }
 
@@ -116,7 +120,7 @@ void myTcpSocket::clientOffine()
     emit offline(this); //发送offine信号
 }
 
-void myTcpSocket::login(PDU *pdu)
+void myTcpSocket::login(protocol::PDU *pdu)
 {
     char password[64] = {"\n"}; //创建password数组用于存放用户密码
     char username[64] = {"\n"}; //创建username数组用于存放用户名
@@ -125,50 +129,50 @@ void myTcpSocket::login(PDU *pdu)
     bool ret = OpeDB::getInsance().handleLogin(username,password); //尝试登录
     if(ret) //如果登录成功
     {
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_LOGIN_RESPOND,LOGIN_OK); //通过默认回复模板产生pdu对象
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_LOGIN_RESPOND,LOGIN_OK); //通过默认回复模板产生pdu对象
         qDebug() << pdu.caData;
-        this->write((char*)&pdu,pdu.uiPDULen);//将协议写入套接字
+        this->write((char*)&pdu,pdu.PDULen);//将协议写入套接字
         this->m_strName = username;
     }
     else   //如果登录失败
     {
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_LOGIN_RESPOND,LOGIN_FAILED);//通过默认回复模板产生pdu对象
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_LOGIN_RESPOND,LOGIN_FAILED);//通过默认回复模板产生pdu对象
         qDebug() << pdu.caData;
-        this->write((char*)&pdu,pdu.uiPDULen);//将协议写入套接字
+        this->write((char*)&pdu,pdu.PDULen);//将协议写入套接字
     }
 
 }
 
-void myTcpSocket::showOnline(PDU* pdu)
+void myTcpSocket::showOnline(protocol::PDU* pdu)
 {
     QStringList ret = OpeDB::getInsance().handleAllOnline(); //查询数据库获取在线用户信息，储存在字符串数组ret中
     uint uiMsgLen = ret.size()*32; //设置协议消息长度为在线用户长度
-    PDU* respdu = createPDU(uiMsgLen);//生成传输协议对象，用来传输数据
-    respdu->uiMsgType = ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;//设置传输的消息类型
+    protocol::PDU* respdu = protocol::createPDU(uiMsgLen);//生成传输协议对象，用来传输数据
+    respdu->uiMsgType = protocol::ENUM_MSG_TYPE_ALL_ONLINE_RESPOND;//设置传输的消息类型
     for(int i = 0;i<ret.size();i++){ //使用循环将用户数据考入缓存区
         memcpy((char*)respdu->caMsg+i*32,ret.at(i).toStdString().c_str(),ret.at(i).size()); //每次向缓存区中拷入32个字节的内容并修改指针偏移量
     }
-    write((char*)respdu,respdu->uiPDULen);//将协议内容写入套接字
+    write((char*)respdu,respdu->PDULen);//将协议内容写入套接字
     free(respdu); //释放缓存区
     respdu = NULL;//防止野指针
 }
 
-void myTcpSocket::searchUser(PDU *pdu)
+void myTcpSocket::searchUser(protocol::PDU *pdu)
 {
     QStringList ret = OpeDB::getInsance().handleSearchUser(pdu->caData);
     uint uiMsgLen = ret.size()*32;
     qDebug()<<uiMsgLen;
-    PDU* respdu = createPDU(uiMsgLen);
-    respdu->uiMsgType = ENUM_MSG_TYPE_SEARCHUSER_RESPOND;
+    protocol::PDU* respdu = protocol::createPDU(uiMsgLen);
+    respdu->uiMsgType = protocol::ENUM_MSG_TYPE_SEARCHUSER_RESPOND;
     for(int i = 0;i<ret.size();i++){
         memcpy((char*)respdu->caMsg+i*32,ret.at(i).toStdString().c_str(),ret.at(i).size());
     }
-    write((char*)respdu,respdu->uiPDULen);
+    write((char*)respdu,respdu->PDULen);
     free(respdu);
     respdu = NULL;
 }
 
-void myTcpSocket::addFriends(PDU *pdu)
+void myTcpSocket::addFriends(protocol::PDU *pdu)
 {
     char pername[64] = {"\n"}; //创建password数组用于存放用户密码
     char username[64] = {"\n"}; //创建username数组用于存放用户名
@@ -176,31 +180,31 @@ void myTcpSocket::addFriends(PDU *pdu)
     strncpy(pername,pdu->caData+64,64);//从pdu.cadata中读取pername
     int ret = OpeDB::getInsance().handleAddFriend(pername,username);
     if(ret == -1){
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"unkown error");
-        write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"unkown error");
+        write((char*)&pdu,pdu.PDULen);
     }else if(ret == 0){
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"friend existed");
-        write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"friend existed");
+        write((char*)&pdu,pdu.PDULen);
 
     }else if(ret == 1){
         myTcpServer::getInstance().FResend(pername,pdu);
 
     }else if(ret ==2){
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user offine");
-        write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user offine");
+        write((char*)&pdu,pdu.PDULen);
 
     }else if(ret == 3){
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user not existed");
-        write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"user not existed");
+        write((char*)&pdu,pdu.PDULen);
 
     }
 
 
 }
 
-void myTcpSocket::handleFriRespond(PDU *pdu,int type)
+void myTcpSocket::handleFriRespond(protocol::PDU *pdu,int type)
 {
-    if(type == ENUM_MSG_TYPE_ADDFRIEND_AGREE){
+    if(type == protocol::ENUM_MSG_TYPE_ADDFRIEND_AGREE){
         char userName[64] = {"\n"};
         char perName[64] = {"\n"};
         memcpy(userName,pdu->caData,64);
@@ -208,15 +212,15 @@ void myTcpSocket::handleFriRespond(PDU *pdu,int type)
         qDebug()<<userName;
         qDebug()<<perName;
         OpeDB::getInsance().handleAddFriend(perName,userName,1);
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方同意");
-        this->write((char*)&pdu,pdu.uiPDULen);
-    }else if(type == ENUM_MSG_TYPE_ADDFRIEND_REFUSE){
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方拒绝");
-        this->write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方同意");
+        this->write((char*)&pdu,pdu.PDULen);
+    }else if(type == protocol::ENUM_MSG_TYPE_ADDFRIEND_REFUSE){
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ADDFRIEND_RESPOND,"对方拒绝");
+        this->write((char*)&pdu,pdu.PDULen);
     }
 }
 
-void myTcpSocket::handleFlushFriends(PDU *pdu)
+void myTcpSocket::handleFlushFriends(protocol::PDU *pdu)
 {
     char userName[64] = {"/n"};
     memcpy(userName,pdu->caData,64);
@@ -224,8 +228,8 @@ void myTcpSocket::handleFlushFriends(PDU *pdu)
     QStringList resultList = OpeDB::getInsance().handleFlushFriends(userName);
     uint msgLen = resultList.length();
 //    qDebug()<<msgLen;
-    PDU* sendPdu = createPDU(msgLen*64);
-    sendPdu->uiMsgType = ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND;
+    protocol::PDU* sendPdu = protocol::createPDU(msgLen*64);
+    sendPdu->uiMsgType = protocol::ENUM_MSG_TYPE_FLUSH_FRIEND_RESPOND;
     memcpy(sendPdu->caData,QString("success").toStdString().c_str(),8);
     int i = 0;
     while(i<resultList.length()){
@@ -233,12 +237,12 @@ void myTcpSocket::handleFlushFriends(PDU *pdu)
 //        qDebug()<<resultList[i].toStdString();
         i++;
     }
-    this->write((char*)sendPdu,sendPdu->uiPDULen);
+    this->write((char*)sendPdu,sendPdu->PDULen);
     delete sendPdu;
     sendPdu = nullptr;
 }
 
-void myTcpSocket::handleDelFriend(PDU *pdu)
+void myTcpSocket::handleDelFriend(protocol::PDU *pdu)
 {
     if(pdu == NULL) return;
     char pername[64] = {"/n"};
@@ -251,7 +255,7 @@ void myTcpSocket::handleDelFriend(PDU *pdu)
 
 }
 
-void myTcpSocket::handlePrivateChat(PDU *pdu)
+void myTcpSocket::handlePrivateChat(protocol::PDU *pdu)
 {
 //    qDebug()<<"handlePrivateChat";
     char username[64] = {"\0"};
@@ -261,13 +265,13 @@ void myTcpSocket::handlePrivateChat(PDU *pdu)
     myTcpServer::getInstance().MsgResend(pername,pdu); //进行转发
 }
 
-void myTcpSocket::requestFault(PDU *pdu)
+void myTcpSocket::requestFault(protocol::PDU *pdu)
 {
-    PDU requestPdu = PDU::default_respond(ENUM_MSG_TYPE_ERROR_RESPOND,"REQUESTFAULT!");
-    this->write((char*)&requestPdu,requestPdu.uiPDULen);
+    protocol::PDU requestPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_ERROR_RESPOND,"REQUESTFAULT!");
+    this->write((char*)&requestPdu,requestPdu.PDULen);
 }
 
-void myTcpSocket::handlePublicChat(PDU *pdu)
+void myTcpSocket::handlePublicChat(protocol::PDU *pdu)
 {
     if(pdu == nullptr) return;
     char username[64] = {"\0"};
@@ -282,7 +286,7 @@ void myTcpSocket::handlePublicChat(PDU *pdu)
 
 }
 
-void myTcpSocket::handleCreateDir(PDU *pdu)
+void myTcpSocket::handleCreateDir(protocol::PDU *pdu)
 {
     QDir dir;
     QString strCurPath = QString("%1").arg((char*)(pdu->caMsg));
@@ -297,22 +301,54 @@ void myTcpSocket::handleCreateDir(PDU *pdu)
         qDebug() << ret;
         if(ret)  //创建的文件名已存在
         {
-                PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_CREATE_DIR_RESPOND,FILE_NAME_EXIT);
-                this->write((char*)&pdu,pdu.uiPDULen);
+                protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_CREATE_DIR_RESPOND,FILE_NAME_EXIT);
+                this->write((char*)&pdu,pdu.PDULen);
         }
         else  //创建的文件名不存在
         {
                 dir.mkdir(strNewPath);
-                PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_CREATE_DIR_RESPOND,CREATE_DIR_SUCESS);
-                this->write((char*)&pdu,pdu.uiPDULen);
+                protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_CREATE_DIR_RESPOND,CREATE_DIR_SUCESS);
+                this->write((char*)&pdu,pdu.PDULen);
 
         }
     }
     else
     {       //当前目录不存在
-        PDU pdu = PDU::default_respond(ENUM_MSG_TYPE_CREATE_DIR_RESPOND,DIR_NOT_EXIST);
-        this->write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_CREATE_DIR_RESPOND,DIR_NOT_EXIST);
+        this->write((char*)&pdu,pdu.PDULen);
     }
+}
+
+void myTcpSocket::handleFlushFile(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+    char* filePath = new char[pdu->uiMsgLen];  //用于存放文件路径
+    memcpy(filePath,(char*)pdu->caMsg,pdu->uiMsgLen);//使用memcpy将协议中的文件路径拷出
+    QDir fileDir(QString::fromUtf8(filePath,pdu->uiMsgLen-1));//创建QDir类对象
+    QFileInfoList fileInfoList =  fileDir.entryInfoList(); //获取当前路径下所有文件列表
+    protocol::FileInfo* fileList = (protocol::FileInfo*)malloc(sizeof(protocol::FileInfo)*fileInfoList.length());
+    int j = 0;
+    protocol::PDU* resultPdu = protocol::createPDU(sizeof(protocol::FileInfo)*fileInfoList.length());
+    qDebug() << fileDir.current();
+    qDebug() << fileInfoList.length();
+    for(const QFileInfo& i : fileInfoList){   //面向范围的for 其中 i 为 集合fileInfoList 中的每一项 循环体中的语句为对每一个i进行
+        if(i.isFile()){
+//                qDebug() <<1;
+                protocol::FileInfo fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_FILE,i.fileName().toStdString().c_str(),i.size());
+                fileList[j] = fileInfo;
+                j++;
+        }
+        else if(i.isDir()){
+//                qDebug() <<0;
+                protocol::FileInfo fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_DIR,i.fileName().toStdString().c_str(),i.size());
+                fileList[j] = fileInfo;
+                j++;
+        }
+    }
+    resultPdu->uiMsgType = protocol::ENUM_MSG_TYPE_FLUSH_FILE_RESPOND;
+    memcpy((char*)resultPdu->caMsg,(char*)fileList,sizeof(protocol::FileInfo)*fileInfoList.length());
+    this->write((char*)resultPdu,resultPdu->PDULen);
+//    qDebug() <<3;
 }
 
 

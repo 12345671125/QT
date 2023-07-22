@@ -75,20 +75,20 @@ Friend::~Friend()
     delete this->m_Timer;
 }
 
-void Friend::showAllOnlineUser(PDU* pdu)
+void Friend::showAllOnlineUser(protocol::PDU* pdu)
 {
     if(pdu == NULL) return;
     this->online->showUser(pdu);
 
 }
 
-void Friend::showSearchUser(PDU *pdu)
+void Friend::showSearchUser(protocol::PDU *pdu)
 {
     if(pdu == NULL) return;
     this->online->showSearchUser(pdu);
 }
 
-void Friend::updateFriend(PDU *pdu)
+void Friend::updateFriend(protocol::PDU *pdu)
 {
     this->m_pFriendListWidget->clear(); //清空现有好友队列
     if(NULL == pdu){
@@ -116,7 +116,7 @@ void Friend::updateFriend(PDU *pdu)
 }
 
 
-void Friend::showPublicChat(PDU *pdu)
+void Friend::showPublicChat(protocol::PDU *pdu)
 {
     qDebug()<<"showPublicChat";
     if(pdu == nullptr) return;
@@ -135,8 +135,8 @@ void Friend::showOnline()
     this->m_pSearchUserPB->setDisabled(false);
     if(online -> isHidden()){
          online->show();
-         PDU pdu = PDU::default_request(ENUM_MSG_TYPE_ALL_ONLINE_REQUEST,"在线用户请求");
-         clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+        protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_ALL_ONLINE_REQUEST,"在线用户请求");
+         clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
     }
     else
          online->hide();
@@ -148,16 +148,16 @@ void Friend::searchUser()
     if(!userName.isEmpty())
     {
 //         qDebug() << userName;
-         PDU  pdu = PDU::default_request(ENUM_MSG_TYPE_SEARCHUSER_REQUEST,userName.toStdString().c_str());
-         clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+         protocol::PDU  pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_SEARCHUSER_REQUEST,userName.toStdString().c_str());
+         clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
     }
 }
 
 void Friend::flushFriends()
 {
-    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST,"");
+    protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_FLUSH_FRIEND_REQUEST,"");
     memcpy(pdu.caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
-    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
 }
 
 void Friend::deleteFriend()
@@ -166,10 +166,10 @@ void Friend::deleteFriend()
     curName = curName.mid(0,curName.length()-5);
     if(QMessageBox::information(this,"删除好友","确定要删除好友"+curName+"?",QMessageBox::Yes,QMessageBox::No) == QMessageBox::Yes){
     /*向服务器发送删除好友请求*/
-    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,"");
+         protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_DELETE_FRIEND_REQUEST,"");
     memcpy(pdu.caData,curName.toStdString().c_str(),64);
     memcpy(pdu.caData+64,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
-    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
     this->flushFriends();
 }
 
@@ -197,13 +197,13 @@ void Friend::publicChat()
         data.append(" : ").append(msg).append("\r\n");
         this->m_pShowMsgTE->append(data);
         this->m_pInputMsgLE->clear();
-        PDU*pdu = createPDU(msg.length());/*生成协议*/
+        protocol::PDU*pdu = protocol::createPDU(msg.length());/*生成协议*/
         memcpy(pdu->caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
-        pdu->uiMsgType = ENUM_MSG_TYPE_PUBLIC_CHAT_REQUEST;
+        pdu->uiMsgType = protocol::ENUM_MSG_TYPE_PUBLIC_CHAT_REQUEST;
 //        QByteArray Bdata = data.toUtf8();
         memcpy((char*)pdu->caMsg,msg.toStdString().c_str(),msg.length());
         /*通过socket发送协议*/
-        clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->uiPDULen);
+        clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
         free(pdu);
         pdu = nullptr;
     }else{
@@ -217,7 +217,7 @@ void Friend::publicChat()
 
 //void Friend::getFOnlineStatus()
 //{
-//    PDU pdu = PDU::default_request(ENUM_MSG_TYPE_FONLINE_STATUS_REQUEST,"");
+//    protocol::PDU pdu = protocol::PDU::default_request(ENUM_MSG_TYPE_FONLINE_STATUS_REQUEST,"");
 //    memcpy(pdu.caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64);
-//    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiPDULen);
+//    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.uiprotocol::PDULen);
 //}

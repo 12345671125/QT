@@ -34,7 +34,7 @@ bool OpeDB::handleLogin(const char *name, const char *pwd)
         return false;
     }
     QString sqlString = QString("select * from userInfo where name = \'%1\' and pwd = \'%2\' and  online = 0").arg(name).arg(pwd);
-//    qDebug()<<sqlString;
+    //    qDebug()<<sqlString;
     QSqlQuery query;
     query.exec(sqlString);
     if(query.next()){
@@ -141,7 +141,7 @@ QStringList OpeDB::handleFlushFriends(const char* userName)
     resultList.clear();
     if(userName == nullptr) return resultList;
     int userid = this->getId(userName);
-//     qDebug()<<userName;
+    //     qDebug()<<userName;
     //qDebug()<<userid;
     QString data = QString("select id,online from userInfo where id in (select friendId from friend,userInfo where friend.id = %1 and friend.id = userInfo.id)").arg(userid);
     QSqlQuery query;
@@ -282,6 +282,6 @@ QString OpeDB::getUserName(const int id) //用于从数据库中通过用户id�
     if(query.next()){
         FriendName = QString(query.value(0).toString());
     }
-//    qDebug()<<FriendName;
+    //    qDebug()<<FriendName;
     return FriendName;
 }

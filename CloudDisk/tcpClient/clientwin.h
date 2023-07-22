@@ -32,6 +32,7 @@ public:
     QTcpSocket& getTcpSocket();
     QString getLoginName();
     QString curPath();
+    void modifyCurPath(QString str);
     ~clientWin();
 public slots:
     void showConnected();
@@ -55,9 +56,10 @@ private:
 
     void initconfig(); //初始化服务器配置
     void connectToServer();
-    void showPrivateMsg(PDU* pdu);
-    void showPublicMsg(PDU* pdu);
-    void showCreateDir(PDU* pdu);
+    void showPrivateMsg(protocol::PDU* pdu);
+    void showPublicMsg(protocol::PDU* pdu);
+    void showCreateDir(protocol::PDU* pdu);
+    void flushFile(protocol::PDU* pdu);
 
 };
 #endif // CLIENTWIN_H

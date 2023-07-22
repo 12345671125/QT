@@ -7,6 +7,7 @@
 #include <string.h>
 #include <windows.h>
 #include <QString>
+#include <QList>
 typedef unsigned int uint;
 
 #define REGIST_OK "regist ok"
@@ -20,6 +21,14 @@ typedef unsigned int uint;
 
 #define CREATE_DIR_SUCESS "create dir sucess"
 
+namespace protocol {
+
+enum FILE_TYPE{
+    FILE_TYPE_DIR = 0,
+    FILE_TYPE_FILE,
+    FILE_TYPE_MAX = 0x00ffffff
+};
+
 enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_MIN = 0,
     ENUM_MSG_TYPE_REGIST_REQUEST, //注册请求
@@ -32,7 +41,7 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_ALL_ONLINE_RESPOND,  //在线用户回复
 
     ENUM_MSG_TYPE_SEARCHUSER_REQUEST, //搜索用户请求
-    ENUM_MSG_TYPE_SEARCHUSER_RESPOND, //搜索用户协议
+    ENUM_MSG_TYPE_SEARCHUSER_RESPOND, //搜索用户回复
 
     ENUM_MSG_TYPE_ADDFRIEND_REQUEST, //添加好友请求
     ENUM_MSG_TYPE_ADDFRIEND_RESPOND,//添加好友回复
@@ -60,20 +69,48 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_CREATE_DIR_REQUEST, //创建文件夹请求
     ENUM_MSG_TYPE_CREATE_DIR_RESPOND, //创建文件夹响应
 
+    ENUM_MSG_TYPE_FLUSH_FILE_REQUEST, //刷新文件请求
+    ENUM_MSG_TYPE_FLUSH_FILE_RESPOND, //刷新文件回复
+
     //    ENUM_MSG_TYPE,
     //    ENUM_MSG_TYPE,
+
+    //    ENUM_MSG_TYPE,
+    //    ENUM_MSG_TYPE,
+
+
     ENUM_MSG_TYPE_ERROR_RESPOND,  //严重请求错误
     ENUM_MSG_TYPE_MAX = 0x00ffffff,
 };
 struct PDU
 {
-    uint uiPDULen; //总的协议数据单元大小
+    uint PDULen; //总的协议数据单元大小
     uint uiMsgType; //消息类型
     char caData[128]; //文件名
     uint uiMsgLen; //实际消息长度
-    int caMsg[]; //实际消息  直接申请一个指针应该是一个效果？
-    static PDU default_respond(uint Type,QString respondStr,uint MsgSize= 0);
-    static PDU default_request(uint Type,QString requestStr,uint MsgSize = 0);
+    int caMsg[]; //实际消息  直接申请一个指针应该是一个效果
+    static PDU default_respond(uint Type,QString respondStr,uint MsgSize = 0); //默认请求模板
+    static PDU default_request(uint Type,QString requestStr,uint MsgSize = 0); //默认回复模板
+
 };
+struct FileInfo
+{
+    int iFileType;   //文件类型
+    char caFileName[64]; //文件名
+    qint64 FileSize; //文件大小
+};
+struct FileInfoList
+{
+    int FileListLength;   //存放文件数量
+    int FileListSize; //总文件数组大小
+    int structSize;   //总文件结构体大小
+    protocol::FileInfo FileList[];  //具体文件数组
+};
+
 PDU* createPDU(uint uiMsgLen);
+FileInfoList* createFileInfoList(int length);
+FileInfo createFileInfo(const int iFileType,const char* caFileName,const qint64 FileSize);
+
+};
+
 #endif // PROTOCOL_H

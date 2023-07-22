@@ -7,14 +7,21 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include "protocol.h"
-class FilePage : public QWidget
+
+class filePage : public QWidget
 {
     Q_OBJECT
 public:
-    FilePage(QWidget *parent);
+    filePage(QWidget *parent = nullptr);
+    void updateFileList(protocol::PDU* pdu);
+    static filePage& getInstance();
+
 
 public slots:
-    void createDir();
+    void createDir(); //创建文件夹
+    void flushFile(); //刷新文件
+    void goBack(); //返回
+    void switchDir(QListWidgetItem * item); //切换路径
 
 private:
     QListWidget* m_pFileListW;
@@ -27,6 +34,7 @@ private:
     QPushButton* m_pDownLoadPB;
     QPushButton* m_pDelFilePB;
     QPushButton* m_pShareFilePB;
+
 };
 
 #endif // FILEPAGE_H

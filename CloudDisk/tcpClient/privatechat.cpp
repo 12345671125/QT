@@ -39,7 +39,7 @@ PrivateChat &PrivateChat::getInstance()
     return instance;
 }
 
-void PrivateChat::showMsg(PDU* pdu)
+void PrivateChat::showMsg(protocol::PDU* pdu)
 {
         char pername[64] = {"\0"};
         QString msg;
@@ -61,12 +61,12 @@ void PrivateChat::on_sendPtn_clicked()
     ui->inputEdit->clear();
 //    qDebug()<<strMsg;
     if(!strMsg.isEmpty()){
-        PDU *pdu = createPDU(strMsg.size()+1);
-        pdu->uiMsgType = ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST;
+        protocol::PDU *pdu = protocol::createPDU(strMsg.size()+1);
+        pdu->uiMsgType = protocol::ENUM_MSG_TYPE_PRIVATE_CHAT_REQUEST;
         memcpy(pdu->caData,clientWin::getInstance().getLoginName().toStdString().c_str(),64); //将已方用户名写入协议
         memcpy(pdu->caData+64,this->m_strChatName.toStdString().c_str(),64); //将聊天对象用户名写入协议
         memcpy((char*)pdu->caMsg,strMsg.toStdString().c_str(),strMsg.length());//将聊天内容写入协议
-        clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->uiPDULen);//将协议写入socket后发送
+        clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);//将协议写入socket后发送
         free(pdu);
         pdu = nullptr;
 
