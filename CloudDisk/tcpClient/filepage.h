@@ -7,6 +7,10 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include "protocol.h"
+#include <QMenu>
+#include <QFile>
+#include <QFileDialog>
+#include <QTimer>
 
 class filePage : public QWidget
 {
@@ -15,6 +19,7 @@ public:
     filePage(QWidget *parent = nullptr);
     void updateFileList(protocol::PDU* pdu);
     static filePage& getInstance();
+    void uploadFileData();
 
 
 public slots:
@@ -22,6 +27,11 @@ public slots:
     void flushFile(); //刷新文件
     void goBack(); //返回
     void switchDir(QListWidgetItem * item); //切换路径
+    void deleteDir();
+    void deleteFile();
+    void renameFile();
+    void uploadFileEnd();
+    void uploadData();
 
 private:
     QListWidget* m_pFileListW;
@@ -34,7 +44,15 @@ private:
     QPushButton* m_pDownLoadPB;
     QPushButton* m_pDelFilePB;
     QPushButton* m_pShareFilePB;
+    QString absolutedFilePath;
+    QString uploadFileName;
+    QTimer* uploadTimer;
+    QTimer* updataTimer; //用于间隔时间发送数据
+    QFile* uploadfile;  //记录上传文件
 
+private slots:
+    void widgetListRequested(const QPoint &pos);
+    void uploadFile();//上传文件
 };
 
 #endif // FILEPAGE_H

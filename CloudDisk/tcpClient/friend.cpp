@@ -65,8 +65,10 @@ Friend::Friend(QWidget *parent) : QWidget(parent)
     QObject::connect(m_pPrivateChatPB,SIGNAL(clicked(bool)),this,SLOT(privateChat()));
 
     QObject::connect(m_pMsgSendPB,SIGNAL(clicked(bool)),this,SLOT(publicChat())); //群聊
+    QObject::connect(m_pFriendListWidget,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(widgetListRequested(QPoint)));
 
 
+    this->m_pFriendListWidget->setContextMenuPolicy(Qt::CustomContextMenu); //添加菜单策略
 }
 
 Friend::~Friend()
@@ -212,6 +214,17 @@ void Friend::publicChat()
     }
 
 
+
+}
+
+void Friend::widgetListRequested(const QPoint &pos)
+{
+    QMenu defaultMenuList =  QMenu(this);
+    QAction flushFriend = QAction(QIcon(QPixmap(":/img/flush.png")),"刷新",this);
+    QObject::connect(&flushFriend,SIGNAL(triggered()),this,SLOT(flushFriends()));
+    defaultMenuList.addAction(&flushFriend);
+    qDebug()<<m_pFriendListWidget->itemAt(mapToGlobal(QCursor::pos()));
+    defaultMenuList.exec(QCursor::pos());
 
 }
 

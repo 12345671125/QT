@@ -13,6 +13,7 @@
 #include "protocol.h"
 #include <QCryptographicHash> //qt内置加密库
 #include "opewidget.h"
+#include <QTimer>
 
 //#define _file_ 1
 //#define _msgText_ 0
@@ -53,6 +54,7 @@ private:
     QTcpSocket clientSocket;//客户端socket对象
     QString m_strLoginName;
     QString m_strCurPath;
+    QTimer* uploadTimer;
 
     void initconfig(); //初始化服务器配置
     void connectToServer();
@@ -60,6 +62,9 @@ private:
     void showPublicMsg(protocol::PDU* pdu);
     void showCreateDir(protocol::PDU* pdu);
     void flushFile(protocol::PDU* pdu);
-
+    void delDir(protocol::PDU* pdu);
+    void delFile(protocol::PDU* pdu);
+    void renameFile(protocol::PDU* pdu);
+    void uploadFile(protocol::PDU* pdu);
 };
 #endif // CLIENTWIN_H

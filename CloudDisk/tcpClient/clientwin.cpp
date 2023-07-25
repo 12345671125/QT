@@ -12,9 +12,12 @@ clientWin::clientWin(QWidget *parent)
     ui->setupUi(this);
     initconfig(); //初始化配置
     connectToServer();
+    this->uploadTimer = new QTimer(this);
+    this->uploadTimer->setInterval(500);
     this->clientSocket.setSocketOption(QTcpSocket::KeepAliveOption,true);
     QObject::connect(&this->clientSocket,SIGNAL(connected()),this,SLOT(showConnected()));
     QObject::connect(&this->clientSocket,SIGNAL(readyRead()),this,SLOT(recvMsg()));
+//    QObject::connect(this->uploadTimer,SIGNAL(timeout()),this,SLOT(uploadFile()));
 }
 
 clientWin &clientWin::getInstance()
@@ -171,18 +174,52 @@ void clientWin::recvMsg()
         break;
     }
 
+    case protocol::ENUM_MSG_TYPE_DELETE_DIR_RESPOND:
+    {
+        this->delDir(pdu);
+        break;
+    }
+
+    case protocol::ENUM_MSG_TYPE_DELETE_FILE_RESPOND:
+    {
+        this->delFile(pdu);
+        break;
+    }
+
+    case protocol::ENUM_MSG_TYPE_RENAME_FILE_RESPOND:
+    {
+        this->renameFile(pdu);
+        break;
+    }
+    case protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND:
+    {
+        OpeWidget::getinstance().getfilePage()->uploadFileData();
+        break;
+    }
+
+    case protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND:
+    {
+        OpeWidget::getinstance().getfilePage()->flushFile();
+        break;
+    }
+
     case protocol::ENUM_MSG_TYPE_ERROR_RESPOND:
     {
         QMessageBox::critical(this,"ERROR","请求错误!,请联系管理员");
         break;
     }
+
     default: break;
   }
+
+  free(pdu);
+  pdu = nullptr;
 }
 
 clientWin::~clientWin()
 {
     delete ui;
+    delete this->uploadTimer;
 }
 
 //#if 0
@@ -292,6 +329,69 @@ void clientWin::flushFile(protocol::PDU *pdu)
 {
     if(pdu == NULL) return;
     filePage::getInstance().updateFileList(pdu);
+}
+
+void clientWin::delDir(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+    char result[64] = {'\0'};
+    memcpy(result,pdu->caData,64);
+    if(strcmp(result,"success") == 0)
+    {
+        QMessageBox::information(this,"删除文件夹","删除成功");
+    }
+    else if(strcmp(result,"dir not exist") == 0)
+    {
+        QMessageBox::information(this,"删除文件夹","文件夹不存在，删除失败");
+    }else if(strcmp(result,"remove fault") == 0)
+    {
+        QMessageBox::information(this,"删除文件夹","删除失败");
+    }
+    OpeWidget::getinstance().getfilePage()->flushFile();
+}
+
+void clientWin::delFile(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+    char result[64] = {'\0'};
+    memcpy(result,pdu->caData,64);
+    if(strcmp(result,"success") == 0)
+    {
+        QMessageBox::information(this,"删除文件","删除成功");
+    }
+    else if(strcmp(result,"file not exist") == 0)
+    {
+        QMessageBox::information(this,"删除文件","文件不存在，删除失败");
+    }else if(strcmp(result,"remove fault") == 0)
+    {
+        QMessageBox::information(this,"删除文件","删除失败");
+    }
+    OpeWidget::getinstance().getfilePage()->flushFile();
+}
+
+void clientWin::renameFile(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+    char result[64] = {'\0'};
+    memcpy(result,pdu->caData,64);
+    if(strcmp(result,"success") == 0)
+    {
+        QMessageBox::information(this,"重命名文件","重命名成功");
+    }
+    else if(strcmp(result,"file not exist") == 0)
+    {
+        QMessageBox::information(this,"重命名文件","文件不存在，重命名失败");
+    }else if(strcmp(result,"rename fault") == 0)
+    {
+        QMessageBox::information(this,"重命名文件","重命名失败");
+    }
+    OpeWidget::getinstance().getfilePage()->flushFile();
+}
+
+void clientWin::uploadFile(protocol::PDU *pdu)
+{
+    this->uploadTimer->stop();
+
 }
 
 void clientWin::on_logout_clicked()

@@ -53,6 +53,8 @@ private:
     QTimer* m_Timer; //这个定时器用与刷新好友P
 
     Online* online;
+private slots:
+        void widgetListRequested(const QPoint &pos);
 //    void getFOnlineStatus(); //获取好友在线状态
 };
 

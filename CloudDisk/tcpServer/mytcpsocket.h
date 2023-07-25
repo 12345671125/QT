@@ -38,6 +38,20 @@ public:
     void handleCreateDir(protocol::PDU* pdu);
 
     void handleFlushFile(protocol::PDU* pdu);
+
+    void handleDelDir(protocol::PDU* pdu);
+
+    void handleDelFile(protocol::PDU* pdu);
+
+    void handleReNameFile(protocol::PDU* pdu);
+
+    void handleUploadFile(protocol::PDU* pdu);
+
+    void handleGetUploadFileData(protocol::PDU* pdu);
+
+    void handleUploadFileFin(protocol::PDU* pdu);
+
+
 public slots:
     void recvMsg();//用于处理请求
     void regist(protocol::PDU* pdu);//用于处理注册
@@ -50,6 +64,8 @@ signals:
     void offline(myTcpSocket* mySocket);
 private:
     QString m_strName;
+    QFile* uploadFile;
+    QString curPath;
 };
 
 #endif // MYTCPSOCKET_H

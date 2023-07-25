@@ -81,10 +81,37 @@ void myTcpSocket::recvMsg()
         this->handleFlushFile(pdu);
         break;
 
+        case protocol::ENUM_MSG_TYPE_DELETE_DIR_REQUEST:
+        this->handleDelDir(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_DELETE_FILE_REQUEST:
+        this->handleDelFile(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_RENAME_FILE_REQUEST:
+        this->handleReNameFile(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST:
+        this->handleUploadFile(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_UPLOADBEG_FILE_REQUEST:
+        this->handleGetUploadFileData(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_REQUEST:
+        this->handleUploadFileFin(pdu);
+        break;
+
         default:
         this->requestFault(pdu);
         break;
     }
+
+    free(pdu);
+    pdu = nullptr;
 }
 
 void myTcpSocket::regist(protocol::PDU* pdu)
@@ -324,13 +351,15 @@ void myTcpSocket::handleFlushFile(protocol::PDU *pdu)
     if(pdu == NULL) return;
     char* filePath = new char[pdu->uiMsgLen];  //用于存放文件路径
     memcpy(filePath,(char*)pdu->caMsg,pdu->uiMsgLen);//使用memcpy将协议中的文件路径拷出
+    this->curPath = filePath;
+    qDebug()<<this->curPath;
     QDir fileDir(QString::fromUtf8(filePath,pdu->uiMsgLen-1));//创建QDir类对象
     QFileInfoList fileInfoList =  fileDir.entryInfoList(); //获取当前路径下所有文件列表
     protocol::FileInfo* fileList = (protocol::FileInfo*)malloc(sizeof(protocol::FileInfo)*fileInfoList.length());
     int j = 0;
     protocol::PDU* resultPdu = protocol::createPDU(sizeof(protocol::FileInfo)*fileInfoList.length());
-    qDebug() << fileDir.current();
-    qDebug() << fileInfoList.length();
+//    qDebug() << fileDir.current();
+//    qDebug() << fileInfoList.length();
     for(const QFileInfo& i : fileInfoList){   //面向范围的for 其中 i 为 集合fileInfoList 中的每一项 循环体中的语句为对每一个i进行
         if(i.isFile()){
 //                qDebug() <<1;
@@ -348,7 +377,119 @@ void myTcpSocket::handleFlushFile(protocol::PDU *pdu)
     resultPdu->uiMsgType = protocol::ENUM_MSG_TYPE_FLUSH_FILE_RESPOND;
     memcpy((char*)resultPdu->caMsg,(char*)fileList,sizeof(protocol::FileInfo)*fileInfoList.length());
     this->write((char*)resultPdu,resultPdu->PDULen);
-//    qDebug() <<3;
+    //    qDebug() <<3;
+}
+
+void myTcpSocket::handleDelDir(protocol::PDU *pdu)
+{
+    QString curPath = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen);
+    char DirName[64] = {'\0'};
+    memcpy(DirName,pdu->caData,64);
+     QDir fileDir(curPath);
+    curPath.append("/" + QString::fromLocal8Bit(DirName,strlen(DirName)));
+    protocol::PDU respondPdu;
+//    qDebug()<<"handleDelDir"<<curPath;
+//    qDebug()<<"handleDelDir"<<fileDir.currentPath();
+    if(fileDir.exists(QString::fromLocal8Bit(DirName,strlen(DirName)))){
+        fileDir = QDir(curPath);
+        qDebug()<<DirName<<"exists";
+        qDebug() << curPath;
+        if(fileDir.removeRecursively())
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_DIR_RESPOND,"success");
+        else
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_DIR_RESPOND,"remove fault");
+    }else
+    {
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_DIR_RESPOND,"dir not exist");
+    }
+    this->write((char*)&respondPdu,respondPdu.PDULen);
+}
+
+void myTcpSocket::handleDelFile(protocol::PDU *pdu)
+{
+    QString curPath = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen);
+    char FileName[64] = {'\0'};
+    memcpy(FileName,pdu->caData,64);
+    QDir fileDir(curPath);
+//    qDebug() << curPath;
+    protocol::PDU respondPdu;
+    if(fileDir.exists(QString::fromLocal8Bit(FileName,strlen(FileName)))){
+//        qDebug()<<fileDir.currentPath();
+        if(fileDir.remove(QString::fromLocal8Bit(FileName,strlen(FileName))))
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_FILE_RESPOND,"success");
+        else
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_FILE_RESPOND,"remove fault");
+    }else
+    {
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_FILE_RESPOND,"file not exist");
+    }
+    this->write((char*)&respondPdu,respondPdu.PDULen);
+}
+
+void myTcpSocket::handleReNameFile(protocol::PDU *pdu)
+{
+    QString curPath = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen);
+    char oldFileName[64] = {'\0'};
+    char newFileName[64] = {'\0'};
+    memcpy(oldFileName,pdu->caData,64);
+    memcpy(newFileName,pdu->caData+64,64);
+    QDir fileDir(curPath);
+    protocol::PDU respondPdu;
+    if(fileDir.exists(QString::fromLocal8Bit(oldFileName,strlen(oldFileName)))){
+
+        if(fileDir.rename(QString::fromLocal8Bit(oldFileName,strlen((oldFileName))),
+                           QString::fromLocal8Bit(newFileName,strlen((newFileName)))))
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_RENAME_FILE_RESPOND,"success");
+        else
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_RENAME_FILE_RESPOND,"rename fault");
+    }else
+    {
+        respondPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DELETE_DIR_RESPOND,"file not exist");
+    }
+    this->write((char*)&respondPdu,respondPdu.PDULen);
+}
+
+void myTcpSocket::handleUploadFile(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+    protocol::FileInfo* fileInfo = (protocol::FileInfo*)malloc(sizeof(protocol::FileInfo));
+    memset((char*)fileInfo,0,sizeof(protocol::FileInfo));//初始化fileInfo
+    memcpy((char*)fileInfo,(char*)pdu->caMsg,pdu->uiMsgLen);//获取上传的文件信息
+    this->uploadFile = new QFile(this->curPath.append("/").append(fileInfo->caFileName));//在对应用户目录创建文件准备写入数据
+    qDebug()<<"UPLOADGET:"<<fileInfo->caFileName;
+    protocol::PDU resultPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND,"UPLOADGET");//向客户端发送响应表示收到发送文件请求
+    this->write((char*)&resultPdu,resultPdu.PDULen);
+
+}
+
+void myTcpSocket::handleGetUploadFileData(protocol::PDU *pdu)
+{
+
+    if(this->uploadFile->open(QIODevice::Append)){
+        this->uploadFile->write((char*)pdu->caMsg,pdu->uiMsgLen);
+        qDebug()<<pdu->uiMsgLen;
+    }
+    this->uploadFile->close();
+}
+
+void myTcpSocket::handleUploadFileFin(protocol::PDU *pdu)
+{
+    char fileName[64] = {'\0'};
+    memcpy(fileName,pdu->caData,64);
+    protocol::PDU resultPdu;
+//    qDebug()<<this->uploadFile->fileName().mid(this->uploadFile->fileName().lastIndexOf("/")+1,
+//                                                 this->uploadFile->fileName().length()-1);
+    if(strcmp(fileName,this->uploadFile->fileName().mid(this->uploadFile->fileName().lastIndexOf("/")+1,
+                                                          this->uploadFile->fileName().length()-1).toStdString().c_str()) == 0){
+         resultPdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND,"success");
+        qDebug()<<1;
+
+    }else{
+         resultPdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND,"fault");
+    }
+//    this->uploadFile->close();
+    this->uploadFile = nullptr;
+    this->write((char*)&resultPdu,resultPdu.PDULen);
 }
 
 
