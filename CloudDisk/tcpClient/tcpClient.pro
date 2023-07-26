@@ -23,7 +23,9 @@ SOURCES += \
     online.cpp \
     opewidget.cpp \
     privatechat.cpp \
-    protocol.cpp
+    protocol.cpp \
+    task.cpp \
+    up_downpage.cpp
 
 HEADERS += \
     clientwin.h \
@@ -32,7 +34,9 @@ HEADERS += \
     online.h \
     opewidget.h \
     privatechat.h \
-    protocol.h
+    protocol.h \
+    task.h \
+    up_downpage.h
 
 FORMS += \
     clientwin.ui \

@@ -149,6 +149,7 @@ void myTcpSocket::clientOffine()
 
 void myTcpSocket::login(protocol::PDU *pdu)
 {
+    qDebug()<<"login";
     char password[64] = {"\n"}; //创建password数组用于存放用户密码
     char username[64] = {"\n"}; //创建username数组用于存放用户名
     strncpy(username,pdu->caData,64);//从pdu.cadata中读取username

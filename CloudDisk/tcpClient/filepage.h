@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QTimer>
+#include "up_downpage.h"
 
 class filePage : public QWidget
 {
@@ -49,6 +50,10 @@ private:
     QTimer* uploadTimer;
     QTimer* updataTimer; //用于间隔时间发送数据
     QFile* uploadfile;  //记录上传文件
+
+signals:
+    void createFileItem(QString fileName, qint64 fileSize);
+    void updateProgress(qint64 uploadSize);
 
 private slots:
     void widgetListRequested(const QPoint &pos);

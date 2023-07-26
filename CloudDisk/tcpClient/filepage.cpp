@@ -10,7 +10,7 @@ filePage::filePage(QWidget *parent)
     this->uploadTimer = new QTimer(this);
     this->uploadTimer->setInterval(1000);
     this->updataTimer = new QTimer(this);
-    this->updataTimer->setInterval(35);
+    this->updataTimer->setInterval(50);
 
     this->uploadfile = nullptr;
 
@@ -57,6 +57,8 @@ filePage::filePage(QWidget *parent)
     connect(m_pUpLoadFilePB,SIGNAL(clicked(bool)),this,SLOT(uploadFile()));
     connect(uploadTimer,SIGNAL(timeout()),this,SLOT(uploadFileEnd()));
     connect(updataTimer,SIGNAL(timeout()),this,SLOT(uploadData()));
+    connect(this,SIGNAL(createFileItem(QString,qint64)),&(up_downPage::getInstance()),SLOT(createFileItem(QString,qint64)));
+    connect(this,SIGNAL(updateProgress(qint64)),&(up_downPage::getInstance()),SLOT(getuploadSize(qint64)));
 
     this->m_pFileListW->setContextMenuPolicy(Qt::CustomContextMenu); //添加菜单策略
 
@@ -111,6 +113,8 @@ void filePage::uploadFile()
     protocol::PDU* pdu = protocol::createPDU(sizeof(protocol::FileInfo));
     pdu->uiMsgType = protocol::ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST;
     memcpy((char*)pdu->caMsg,(char*)&fileInfo,sizeof(protocol::FileInfo));
+    up_downPage::getInstance().setPage(0);
+    up_downPage::getInstance().show();
     clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
     free(pdu);
     pdu = nullptr;
@@ -124,6 +128,7 @@ void filePage::uploadFileData()
         this->uploadfile = nullptr;
         return;
     }
+    emit createFileItem(this->uploadFileName,(qint64)this->uploadfile->size());
     this->updataTimer->start();
 
 }
@@ -145,6 +150,7 @@ void filePage::uploadData()
     ret = this->uploadfile->read(pBuffer,4096); //循环的中文件中读数据,一次读4096B
     qDebug()<<ret;
     if(ret > 0 && ret <= 4096){
+            emit updateProgress(ret);
             pdu = protocol::createPDU(ret);
             pdu->uiMsgType = protocol::ENUM_MSG_TYPE_UPLOADBEG_FILE_REQUEST;
             memcpy(pdu->caData,this->uploadFileName.toStdString().c_str(),this->uploadFileName.length());
@@ -152,6 +158,7 @@ void filePage::uploadData()
             clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
     }else if(ret == 0)
     {
+            emit updateProgress(ret);
             this->updataTimer->stop();
             this->uploadfile->close();
             this->uploadfile = nullptr;

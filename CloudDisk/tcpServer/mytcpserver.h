@@ -5,6 +5,7 @@
 #define MYTCPSERVER_H
 #pragma once
 #include <QTcpServer>
+#include <QThread>
 #include "mytcpsocket.h"
 #include <QList> //引入QList 用来存放socket
 class myTcpServer : public QTcpServer

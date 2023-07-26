@@ -32,6 +32,7 @@ protocol::PDU protocol::PDU::default_respond(uint Type,QString respondStr,uint M
     instance.PDULen = sizeof(protocol::PDU);
     instance.uiMsgLen = MsgSize;
     instance.uiMsgType = Type;
+    respondStr.append('\0');
     memcpy(instance.caData,respondStr.toStdString().c_str(),respondStr.length());
     return instance;
 }
