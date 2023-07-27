@@ -38,20 +38,14 @@ void up_downPage::setPage(int index)
     this->switchList->setCurrentRow(index);
 }
 
-void up_downPage::createFileItem(QString FileName, qint64 FileSize)
+void up_downPage::createFileItem(QString absolutedPath,qintptr socketDesc)
 {
-    task* Task = new task(FileName,FileSize,this->upPage->width()-40,0,this);
-    this->upPage->addItem(Task->getListWidgeItem());
-    this->upPage->setItemWidget(Task->getListWidgeItem(),Task->getWidget());
-    QThread* workThread = new QThread(this);
-    Task->moveToThread(workThread);
-    workThread->start();
-    QObject::connect(this,SIGNAL(updateProgress(qint64)),Task,SLOT(updateProgress(qint64)));
-}
-
-void up_downPage::getuploadSize(qint64 uploadSize)
-{
-    emit updateProgress(uploadSize);
+    QString FileName = absolutedPath.mid(absolutedPath.lastIndexOf("/")+1,absolutedPath.length()-1);
+    ItemUI* itemui = new ItemUI(FileName,this->upPage->width()-40,30,this);
+    connect(this,SIGNAL(createTask(QString,qintptr)),itemui,SLOT(createTask(QString,qintptr)));
+    this->upPage->addItem(itemui->getListWidgeItem());
+    this->upPage->setItemWidget(itemui->getListWidgeItem(),itemui->getWidget());
+    emit createTask(absolutedPath,socketDesc);
 }
 
 void up_downPage::switchPage()

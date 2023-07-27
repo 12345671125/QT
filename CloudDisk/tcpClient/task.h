@@ -1,38 +1,39 @@
 #ifndef TASK_H
 #define TASK_H
+#pragma once
+#include <QObject>
+#include "protocol.h"
+#include <QMessageBox>
+#include <QTcpSocket>
+#include <QFile>
+#include <QTimer>
+#include <QThread>
 
-#include "process.h"
-#include <QWidget>
-#include <QDebug>
-#include <QLayout>
-#include <QPushButton>
-#include <QLabel>
-#include <QProgressBar>
-#include <QLayout>
-#include <QListWidgetItem>
-
-class task : public QWidget
+class Task : public QObject
 {
     Q_OBJECT
 public:
-    explicit task(QString FileName,qint64 FileSize,int width,int height = 0,QWidget *parent = NULL);
-    ~task();
-    QWidget* getWidget();
-    QListWidgetItem* getListWidgeItem();
+    explicit Task(QObject *parent = NULL);
+    ~Task();
+    void uploadFileData();
 
 public slots:
-    void updateProgress(qint64 uploadSize);
+    void taskStart(void);
+    void uploadData();
+    void timeinit(QString absolutedPath,qintptr socket);
+    void uploadFileEnd();
 private:
-    QWidget*itemWidget;
-    QPushButton* cancelBtn;
-    QPushButton* stopBtn;
-    QLabel* fileNameLab;
-    QProgressBar* progressBar;
-    QListWidgetItem* item;
-    QString FileName;
-    qint64 totalFileSize;
-    qint64 curFileSize;
+
+    QString FileName; //文件名
+    qint64 totalFileSize; //文件大小
+    qint64 curFileSize; //已上传文件大小
+    QTcpSocket* clientSocket; //存放客户端socket
+    QFile* file;  //文件描述符
+    QTimer* updataTimer = nullptr; //用于间隔时间发送数据
+    QTimer* uploadTimer = nullptr;
 signals:
+    void updatePgBGUI(int percent);
+    void taskFin();
 
 };
 

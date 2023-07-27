@@ -18,6 +18,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     filepage.cpp \
     friend.cpp \
+    itemui.cpp \
     main.cpp \
     clientwin.cpp \
     online.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     clientwin.h \
     filepage.h \
     friend.h \
+    itemui.h \
     online.h \
     opewidget.h \
     privatechat.h \

@@ -193,7 +193,7 @@ void clientWin::recvMsg()
     }
     case protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND:
     {
-        OpeWidget::getinstance().getfilePage()->uploadFileData();
+        OpeWidget::getinstance().getfilePage()->emitSignal();
         break;
     }
 

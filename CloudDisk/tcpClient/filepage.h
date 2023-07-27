@@ -20,7 +20,7 @@ public:
     filePage(QWidget *parent = nullptr);
     void updateFileList(protocol::PDU* pdu);
     static filePage& getInstance();
-    void uploadFileData();
+    void emitSignal();
 
 
 public slots:
@@ -32,7 +32,6 @@ public slots:
     void deleteFile();
     void renameFile();
     void uploadFileEnd();
-    void uploadData();
 
 private:
     QListWidget* m_pFileListW;
@@ -47,17 +46,15 @@ private:
     QPushButton* m_pShareFilePB;
     QString absolutedFilePath;
     QString uploadFileName;
-    QTimer* uploadTimer;
-    QTimer* updataTimer; //用于间隔时间发送数据
     QFile* uploadfile;  //记录上传文件
+    QString fileName;
 
 signals:
-    void createFileItem(QString fileName, qint64 fileSize);
-    void updateProgress(qint64 uploadSize);
+    void createFileItem(QString absolutedFilePath,qintptr socketDesc);
 
 private slots:
     void widgetListRequested(const QPoint &pos);
-    void uploadFile();//上传文件
+    void uploadFile();
 };
 
 #endif // FILEPAGE_H

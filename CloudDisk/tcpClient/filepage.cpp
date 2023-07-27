@@ -7,13 +7,7 @@
 filePage::filePage(QWidget *parent)
     : QWidget(parent)
 {
-    this->uploadTimer = new QTimer(this);
-    this->uploadTimer->setInterval(1000);
-    this->updataTimer = new QTimer(this);
-    this->updataTimer->setInterval(50);
-
     this->uploadfile = nullptr;
-
     this->m_pFileListW = new QListWidget;
     this->m_pReturnPB = new QPushButton("返回",this);
     this->m_pCreateDirPB = new QPushButton("创建文件夹",this);
@@ -55,10 +49,8 @@ filePage::filePage(QWidget *parent)
     connect(m_pRenameFilePB,SIGNAL(clicked(bool)),this,SLOT(renameFile()));
     connect(m_pFileListW,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(widgetListRequested(QPoint)));
     connect(m_pUpLoadFilePB,SIGNAL(clicked(bool)),this,SLOT(uploadFile()));
-    connect(uploadTimer,SIGNAL(timeout()),this,SLOT(uploadFileEnd()));
-    connect(updataTimer,SIGNAL(timeout()),this,SLOT(uploadData()));
-    connect(this,SIGNAL(createFileItem(QString,qint64)),&(up_downPage::getInstance()),SLOT(createFileItem(QString,qint64)));
-    connect(this,SIGNAL(updateProgress(qint64)),&(up_downPage::getInstance()),SLOT(getuploadSize(qint64)));
+    connect(this,SIGNAL(createFileItem(QString,qintptr)),&(up_downPage::getInstance()),SLOT(createFileItem(QString ,qintptr)));
+
 
     this->m_pFileListW->setContextMenuPolicy(Qt::CustomContextMenu); //添加菜单策略
 
@@ -98,9 +90,17 @@ filePage &filePage::getInstance()
     return filepage;
 }
 
+void filePage::emitSignal()
+{
+    emit createFileItem(this->absolutedFilePath,clientWin::getInstance().getTcpSocket().socketDescriptor());
+}
+
 void filePage::uploadFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,"选择文件");
+    this->fileName = QFileDialog::getOpenFileName(this,"选择文件");
+    if(fileName.isEmpty()){
+        return;
+    }
     this->absolutedFilePath = fileName;
     qDebug()<<this->absolutedFilePath;
     QFile file = QFile(fileName);
@@ -119,53 +119,6 @@ void filePage::uploadFile()
     free(pdu);
     pdu = nullptr;
 }
-void filePage::uploadFileData()
-{
-    this->uploadfile = new QFile(this->absolutedFilePath);
-    qDebug()<<"uploadFileData"<<this->absolutedFilePath;
-    if(!this->uploadfile->open(QIODevice::ReadOnly) && this->uploadFileName.isEmpty()){
-        QMessageBox::warning(this,"上传文件","打开文件失败");
-        this->uploadfile = nullptr;
-        return;
-    }
-    emit createFileItem(this->uploadFileName,(qint64)this->uploadfile->size());
-    this->updataTimer->start();
-
-}
-
-void filePage::uploadFileEnd()
-{
-    qDebug()<<"uploadFileEnd";
-    this->uploadTimer->stop();
-    protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_REQUEST,this->uploadFileName);
-    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
-}
-
-void filePage::uploadData()
-{
-    char* pBuffer = new char[4096]; //数据缓冲区
-    protocol::PDU* pdu = nullptr;
-    qint64 ret = 0;
-    memset(pBuffer,0,4096);
-    ret = this->uploadfile->read(pBuffer,4096); //循环的中文件中读数据,一次读4096B
-    qDebug()<<ret;
-    if(ret > 0 && ret <= 4096){
-            emit updateProgress(ret);
-            pdu = protocol::createPDU(ret);
-            pdu->uiMsgType = protocol::ENUM_MSG_TYPE_UPLOADBEG_FILE_REQUEST;
-            memcpy(pdu->caData,this->uploadFileName.toStdString().c_str(),this->uploadFileName.length());
-            memcpy((char*)pdu->caMsg,pBuffer,ret);
-            clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
-    }else if(ret == 0)
-    {
-            emit updateProgress(ret);
-            this->updataTimer->stop();
-            this->uploadfile->close();
-            this->uploadfile = nullptr;
-            this->uploadTimer->start();
-    }
-}
-
 void filePage::createDir()
 {
     QString strNewDir = QInputDialog::getText(this,"新建文件夹","新建文件夹名字");
@@ -371,4 +324,10 @@ void filePage::widgetListRequested(const QPoint &pos)
     }
 
 
+}
+void filePage::uploadFileEnd()
+{
+    qDebug()<<"uploadFileEnd";
+    protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_REQUEST,this->fileName);
+    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
 }

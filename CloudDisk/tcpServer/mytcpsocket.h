@@ -8,6 +8,8 @@
 #include "protocol.h"
 #include "opedb.h"
 #include <QFileInfoList>
+#include <QFile>
+#include <QVector>
 
 class myTcpSocket : public QTcpSocket
 {
@@ -64,7 +66,7 @@ signals:
     void offline(myTcpSocket* mySocket);
 private:
     QString m_strName;
-    QFile* uploadFile;
+    QVector<QFile*> uploadFileVector;
     QString curPath;
 };
 

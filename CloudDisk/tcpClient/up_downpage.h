@@ -9,8 +9,8 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QProgressBar>
-#include "task.h"
 #include <QThread>
+#include "itemui.h"
 
 
 class up_downPage : public QWidget
@@ -21,8 +21,7 @@ public:
     static up_downPage& getInstance();
     void setPage(int index);
 public slots:
-    void createFileItem(QString FileName,qint64 FileSize);
-    void getuploadSize(qint64 uploadSize);
+    void createFileItem(QString absolutedPath,qintptr socketDesce);
 private:
     QStackedWidget* stackedWidget;
     QListWidget* upPage;
@@ -31,11 +30,11 @@ private:
 
 
 signals:
-   void updateProgress(qint64 uploadSize);
+    void createTask(QString absolutedPath,qintptr socketDesc);
+
 
 private slots:
     void switchPage();
-
 };
 
 #endif // UP_DOWNPAGE_H
