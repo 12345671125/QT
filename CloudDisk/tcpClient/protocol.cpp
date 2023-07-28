@@ -22,6 +22,7 @@ protocol::PDU protocol::PDU::default_request(uint Type,QString requestStr,uint M
     instance.PDULen = sizeof(protocol::PDU);
     instance.uiMsgLen = MsgSize;
     instance.uiMsgType = Type;
+    requestStr.append('\0');
     memcpy(instance.caData,requestStr.toStdString().c_str(),requestStr.length());
     return instance;
 }
@@ -32,18 +33,22 @@ protocol::PDU protocol::PDU::default_respond(uint Type,QString respondStr,uint M
     instance.PDULen = sizeof(protocol::PDU);
     instance.uiMsgLen = MsgSize;
     instance.uiMsgType = Type;
+    respondStr.append('\0');
     memcpy(instance.caData,respondStr.toStdString().c_str(),respondStr.length());
     return instance;
 }
 
 
 
-protocol::FileInfo protocol::createFileInfo(const int iFileType, const char *caFileName, const qint64 FileSize)
+protocol::FileInfo* protocol::createFileInfo(const int iFileType, const char *caFileName, const qint64 FileSize,int pathLen)
 {
-    protocol::FileInfo fileInfo;
-    fileInfo.iFileType = iFileType;
-    memcpy(fileInfo.caFileName,caFileName,64);
-    fileInfo.FileSize = FileSize;
+    int totalSize = sizeof(protocol::FileInfo) + pathLen;
+    protocol::FileInfo* fileInfo = (FileInfo*)malloc(totalSize);
+    fileInfo->iFileType = iFileType;
+    memcpy(fileInfo->caFileName,caFileName,64);
+    fileInfo->FileSize = FileSize;
+    fileInfo->pathLen = pathLen;
+    fileInfo->totalSize = totalSize;
     return fileInfo;
 }
 

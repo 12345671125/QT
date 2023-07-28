@@ -33,6 +33,8 @@ public:
     QTcpSocket& getTcpSocket();
     QString getLoginName();
     QString curPath();
+    QString getServerIp();
+    quint16 getServerPort();
     void modifyCurPath(QString str);
     ~clientWin();
 public slots:

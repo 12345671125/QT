@@ -21,7 +21,7 @@ public:
     static up_downPage& getInstance();
     void setPage(int index);
 public slots:
-    void createFileItem(QString absolutedPath,qintptr socketDesce);
+    void createFileItem(QString curPath,QString absolutedPath);
 private:
     QStackedWidget* stackedWidget;
     QListWidget* upPage;
@@ -30,7 +30,7 @@ private:
 
 
 signals:
-    void createTask(QString absolutedPath,qintptr socketDesc);
+    void createTask(QString curPath,QString absolutedPath);
 
 
 private slots:

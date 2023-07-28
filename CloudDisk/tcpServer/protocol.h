@@ -104,9 +104,12 @@ struct PDU
 };
 struct FileInfo
 {
+    int totalSize; //总文件结构体大小
     int iFileType;   //文件类型
     char caFileName[64]; //文件名
     qint64 FileSize; //文件大小
+    int pathLen; //保存路径长
+    char savaPath[]; //所要保存的路径
 };
 struct FileInfoList
 {
@@ -118,7 +121,7 @@ struct FileInfoList
 
 PDU* createPDU(uint uiMsgLen);
 FileInfoList* createFileInfoList(int length);
-FileInfo createFileInfo(const int iFileType,const char* caFileName,const qint64 FileSize);
+FileInfo* createFileInfo(const int iFileType,const char* caFileName,const qint64 FileSize,int pathLen);
 
 };
 

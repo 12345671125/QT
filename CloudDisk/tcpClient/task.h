@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QTimer>
 #include <QThread>
+#include <QHostAddress>
 
 class Task : public QObject
 {
@@ -20,8 +21,9 @@ public:
 public slots:
     void taskStart(void);
     void uploadData();
-    void timeinit(QString absolutedPath,qintptr socket);
     void uploadFileEnd();
+    void taskThreadinit(QString curPath,QString absolutedPath, QString address, quint16 port);
+    void uploadFile(QString curPath,QString absolutedFileName);
 private:
 
     QString FileName; //文件名
@@ -31,9 +33,11 @@ private:
     QFile* file;  //文件描述符
     QTimer* updataTimer = nullptr; //用于间隔时间发送数据
     QTimer* uploadTimer = nullptr;
+    QString absolutedPath;
 signals:
     void updatePgBGUI(int percent);
     void taskFin();
+    void finished();
 
 };
 

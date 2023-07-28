@@ -9,8 +9,6 @@ myTcpSocket::myTcpSocket()
     QObject::connect(this,SIGNAL(readyRead()),this,SLOT(recvMsg()));
     QObject::connect(this,SIGNAL(disconnected()),this,SLOT(clientOffine()));
     this->setSocketOption(QTcpSocket::KeepAliveOption,true);
-    this->uploadFileVector = QVector<QFile*>();
-    this->uploadFileVector.clear();
 }
 
 QString myTcpSocket::getName()
@@ -145,7 +143,9 @@ void myTcpSocket::regist(protocol::PDU* pdu)
 
 void myTcpSocket::clientOffine()
 {
-    OpeDB::getInsance().handleOffline(m_strName.toStdString().c_str()); //调用数据库方法
+    if(!m_strName.isEmpty()){
+        OpeDB::getInsance().handleOffline(m_strName.toStdString().c_str()); //调用数据库方法
+    }
     emit offline(this); //发送offine信号
 }
 
@@ -366,14 +366,14 @@ void myTcpSocket::handleFlushFile(protocol::PDU *pdu)
     for(const QFileInfo& i : fileInfoList){   //面向范围的for 其中 i 为 集合fileInfoList 中的每一项 循环体中的语句为对每一个i进行
         if(i.isFile()){
 //                qDebug() <<1;
-                protocol::FileInfo fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_FILE,i.fileName().toStdString().c_str(),i.size());
-                fileList[j] = fileInfo;
+                protocol::FileInfo* fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_FILE,i.fileName().toStdString().c_str(),i.size(),0);
+                fileList[j] = *fileInfo;
                 j++;
         }
         else if(i.isDir()){
 //                qDebug() <<0;
-                protocol::FileInfo fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_DIR,i.fileName().toStdString().c_str(),i.size());
-                fileList[j] = fileInfo;
+                protocol::FileInfo* fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_DIR,i.fileName().toStdString().c_str(),i.size(),0);
+                fileList[j] = *fileInfo;
                 j++;
         }
     }
@@ -455,57 +455,39 @@ void myTcpSocket::handleReNameFile(protocol::PDU *pdu)
 void myTcpSocket::handleUploadFile(protocol::PDU *pdu)
 {
     if(pdu == NULL) return;
-    protocol::FileInfo* fileInfo = (protocol::FileInfo*)malloc(sizeof(protocol::FileInfo));
-    memset((char*)fileInfo,0,sizeof(protocol::FileInfo));//初始化fileInfo
+    protocol::FileInfo* fileInfo = (protocol::FileInfo*)malloc(pdu->uiMsgLen);
     memcpy((char*)fileInfo,(char*)pdu->caMsg,pdu->uiMsgLen);//获取上传的文件信息
+    this->curPath = QString::fromLocal8Bit(fileInfo->savaPath,fileInfo->pathLen);
+    qDebug()<<this->curPath;
     QFile* file = new QFile(this->curPath.append("/").append(fileInfo->caFileName));//在对应用户目录创建文件准备写入数据
-    this->uploadFileVector.push_back(file);
+    this->file = file;
 //    qDebug()<<"UPLOADGET:"<<fileInfo->caFileName;
     protocol::PDU resultPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND,"UPLOADGET");//向客户端发送响应表示收到发送文件请求
     this->write((char*)&resultPdu,resultPdu.PDULen);
-
 }
 
 void myTcpSocket::handleGetUploadFileData(protocol::PDU *pdu)
 {
-    QFile file = QFile("1");
     char fileName[64] = {'\0'};
     memcpy(fileName,pdu->caData,64);
-//    qDebug()<<fileName;
-    for(int i = 0;i<this->uploadFileVector.length();i++){
-//        qDebug()<<this->uploadFileVector[i]->fileName();
-        if(strcmp(this->uploadFileVector[i]->fileName().mid(this->uploadFileVector[i]->fileName().lastIndexOf('/')+1,
-         this->uploadFileVector[i]->fileName().length()-1).toStdString().c_str()
-                   ,fileName) == 0){
-        if(this->uploadFileVector[i]->open(QIODevice::Append)){
-            this->uploadFileVector[i]->write((char*)pdu->caMsg,pdu->uiMsgLen);
-//            qDebug()<<pdu->uiMsgLen;
-        }
-        this->uploadFileVector[i]->close();
-        }
+    if(this->file == NULL){
+        return;
     }
+    if(this->file->open(QIODevice::Append)){
+        file->write((char*)pdu->caMsg,pdu->uiMsgLen);
+        file->close();
+    }
+
 }
 
 void myTcpSocket::handleUploadFileFin(protocol::PDU *pdu)
 {
+
     char fileName[64] = {'\0'};
     memcpy(fileName,pdu->caData,64);
     protocol::PDU resultPdu;
     qDebug()<<pdu->caData;
-    for(int i = 0;i<this->uploadFileVector.length();i++){
-        if(strcmp(fileName,this->uploadFileVector[i]->fileName().mid(this->uploadFileVector[i]->fileName().lastIndexOf("/")+1,
-                                                                       this->uploadFileVector[i]->fileName().length()-1).toStdString().c_str()) == 0){
-        resultPdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND,"success");
-        qDebug()<<this->curPath;
-       this->uploadFileVector[i]->close();
-        delete this->uploadFileVector.at(i);
-        this->uploadFileVector.removeAt(i);
-        break;
-        }else{
-        resultPdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND,"fault");
-        break;
-        }
-    }
+    resultPdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND,"success");
 //    this->uploadFile->close();
     this->write((char*)&resultPdu,resultPdu.PDULen);
 }

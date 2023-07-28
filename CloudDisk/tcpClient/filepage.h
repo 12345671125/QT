@@ -50,11 +50,12 @@ private:
     QString fileName;
 
 signals:
-    void createFileItem(QString absolutedFilePath,qintptr socketDesc);
+    void createFileItem(QString curPath,QString absolutedFilePath);
 
 private slots:
     void widgetListRequested(const QPoint &pos);
     void uploadFile();
+    void openUp_downPage();
 };
 
 #endif // FILEPAGE_H

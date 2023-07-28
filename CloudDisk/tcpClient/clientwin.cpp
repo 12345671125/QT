@@ -191,11 +191,11 @@ void clientWin::recvMsg()
         this->renameFile(pdu);
         break;
     }
-    case protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND:
-    {
-        OpeWidget::getinstance().getfilePage()->emitSignal();
-        break;
-    }
+//    case protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND:
+//    {
+//        OpeWidget::getinstance().getfilePage()->emitSignal();
+//        break;
+//    }
 
     case protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND:
     {
@@ -402,6 +402,16 @@ void clientWin::on_logout_clicked()
 QString clientWin::curPath()
 {
     return this->m_strCurPath;
+}
+
+QString clientWin::getServerIp()
+{
+    return this->ip;
+}
+
+quint16 clientWin::getServerPort()
+{
+    return this->port;
 }
 
 void clientWin::modifyCurPath(QString str)

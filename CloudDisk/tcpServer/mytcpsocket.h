@@ -66,7 +66,7 @@ signals:
     void offline(myTcpSocket* mySocket);
 private:
     QString m_strName;
-    QVector<QFile*> uploadFileVector;
+    QFile* file = NULL;
     QString curPath;
 };
 

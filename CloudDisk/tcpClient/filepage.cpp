@@ -25,7 +25,7 @@ filePage::filePage(QWidget *parent)
     this->m_pUpLoadFilePB =  new QPushButton("上传文件",this);
     this->m_pDownLoadPB = new QPushButton("下载文件",this);
     this->m_pDelFilePB = new QPushButton("删除文件",this);
-    this->m_pShareFilePB = new QPushButton("分享文件",this);
+    this->m_pShareFilePB = new QPushButton("打开任务进度界面",this);
 
     QVBoxLayout* pFileVBL = new QVBoxLayout;
     pFileVBL->addWidget(this->m_pUpLoadFilePB);
@@ -49,8 +49,8 @@ filePage::filePage(QWidget *parent)
     connect(m_pRenameFilePB,SIGNAL(clicked(bool)),this,SLOT(renameFile()));
     connect(m_pFileListW,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(widgetListRequested(QPoint)));
     connect(m_pUpLoadFilePB,SIGNAL(clicked(bool)),this,SLOT(uploadFile()));
-    connect(this,SIGNAL(createFileItem(QString,qintptr)),&(up_downPage::getInstance()),SLOT(createFileItem(QString ,qintptr)));
-
+    connect(this,SIGNAL(createFileItem(QString,QString)),&(up_downPage::getInstance()),SLOT(createFileItem(QString,QString)));
+    connect(m_pShareFilePB,SIGNAL(clicked()),this,SLOT(openUp_downPage()));
 
     this->m_pFileListW->setContextMenuPolicy(Qt::CustomContextMenu); //添加菜单策略
 
@@ -92,7 +92,7 @@ filePage &filePage::getInstance()
 
 void filePage::emitSignal()
 {
-    emit createFileItem(this->absolutedFilePath,clientWin::getInstance().getTcpSocket().socketDescriptor());
+    emit createFileItem(clientWin::getInstance().curPath(),this->absolutedFilePath);
 }
 
 void filePage::uploadFile()
@@ -102,22 +102,15 @@ void filePage::uploadFile()
         return;
     }
     this->absolutedFilePath = fileName;
-    qDebug()<<this->absolutedFilePath;
-    QFile file = QFile(fileName);
-    file.open(QFile::ReadOnly);
-    qDebug()<<file.size();
-    QString loFileName = fileName.mid(fileName.lastIndexOf("/")+1,fileName.length()-1);
-    this->uploadFileName = loFileName.append('\0');
-    qDebug()<<loFileName;
-    protocol::FileInfo fileInfo = protocol::createFileInfo(protocol::FILE_TYPE_FILE,loFileName.toStdString().c_str(),file.size());
-    protocol::PDU* pdu = protocol::createPDU(sizeof(protocol::FileInfo));
-    pdu->uiMsgType = protocol::ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST;
-    memcpy((char*)pdu->caMsg,(char*)&fileInfo,sizeof(protocol::FileInfo));
     up_downPage::getInstance().setPage(0);
     up_downPage::getInstance().show();
-    clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
-    free(pdu);
-    pdu = nullptr;
+    qDebug()<<this->absolutedFilePath;
+    this->emitSignal();
+}
+
+void filePage::openUp_downPage()
+{
+    up_downPage::getInstance().show();
 }
 void filePage::createDir()
 {

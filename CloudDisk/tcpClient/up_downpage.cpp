@@ -38,14 +38,15 @@ void up_downPage::setPage(int index)
     this->switchList->setCurrentRow(index);
 }
 
-void up_downPage::createFileItem(QString absolutedPath,qintptr socketDesc)
+void up_downPage::createFileItem(QString curPath,QString absolutedPath)
 {
     QString FileName = absolutedPath.mid(absolutedPath.lastIndexOf("/")+1,absolutedPath.length()-1);
     ItemUI* itemui = new ItemUI(FileName,this->upPage->width()-40,30,this);
-    connect(this,SIGNAL(createTask(QString,qintptr)),itemui,SLOT(createTask(QString,qintptr)));
+    connect(this,SIGNAL(createTask(QString,QString)),itemui,SLOT(createTask(QString,QString)));
     this->upPage->addItem(itemui->getListWidgeItem());
     this->upPage->setItemWidget(itemui->getListWidgeItem(),itemui->getWidget());
-    emit createTask(absolutedPath,socketDesc);
+    emit createTask(curPath,absolutedPath);
+    disconnect(this,SIGNAL(createTask(QString,QString)),itemui,SLOT(createTask(QString,QString)));
 }
 
 void up_downPage::switchPage()

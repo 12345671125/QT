@@ -20,7 +20,7 @@ public:
     QWidget* getWidget();
 
 public slots:
-    void createTask(QString absolutedPath,qintptr socketDesc);
+    void createTask(QString curPath,QString absolutedPath);
     void updatePgBGUI(int percent);
 private:
     QWidget*itemWidget;
@@ -29,10 +29,14 @@ private:
     QLabel* fileNameLab;
     QProgressBar* progressBar;
     QListWidgetItem* item;
+    QHBoxLayout* itemMainLay;
+    QHBoxLayout* btnLayout;
+    QVBoxLayout* mainVLayout;
+
 signals:
     void setItem(QListWidgetItem*,QWidget*);
     void taskStart(void);
-    void timeinit(QString,qintptr);
+    void taskThreadinit(QString,QString,QString,quint16);
 };
 
 #endif // ITEMUI_H
