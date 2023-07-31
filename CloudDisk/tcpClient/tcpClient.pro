@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    fileinfopage.cpp \
     filepage.cpp \
     friend.cpp \
     itemui.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 
 HEADERS += \
     clientwin.h \
+    fileinfopage.h \
     filepage.h \
     friend.h \
     itemui.h \
@@ -42,6 +44,7 @@ HEADERS += \
 
 FORMS += \
     clientwin.ui \
+    fileinfopage.ui \
     online.ui \
     privatechat.ui
 

@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <QString>
 #include <QList>
+#include <QDateTime>
 typedef unsigned int uint;
 
 #define REGIST_OK "regist ok"
@@ -81,6 +82,9 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_RENAME_FILE_REQUEST, //文件重命名请求
     ENUM_MSG_TYPE_RENAME_FILE_RESPOND, //文件重命名回复
 
+    ENUM_MSG_TYPE_UPLOADFILEINFO_REQUEST, //上传文件信息请求
+    ENUM_MSG_TYPE_UPLOADFILEINFO_RESPOND, //上传文件信息请求
+
     ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST, //上传文件请求
     ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND, //服务器得到上传文件请求
     ENUM_MSG_TYPE_UPLOADBEG_FILE_REQUEST, //客户端上传文件开始请求
@@ -111,6 +115,13 @@ struct FileInfo
     int pathLen; //保存路径长
     char savaPath[]; //所要保存的路径
 };
+struct FileInfo_s
+{
+    char filename[64] ;   //文件名
+    qint64 filesize;    //文件大小
+    QDateTime uploadTime;   //上传时间
+    char uploadname[64];     //上传者
+};
 struct FileInfoList
 {
     int FileListLength;   //存放文件数量
@@ -122,7 +133,7 @@ struct FileInfoList
 PDU* createPDU(uint uiMsgLen);
 FileInfoList* createFileInfoList(int length);
 FileInfo* createFileInfo(const int iFileType,const char* caFileName,const qint64 FileSize,int pathLen);
-
+FileInfo_s* createFileInfo_s(const char* filename,const qint64 filesize,const char* uploadname);
 };
 
 #endif // PROTOCOL_H

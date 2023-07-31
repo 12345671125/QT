@@ -3,7 +3,6 @@
 
 #include "opedb.h"
 
-
 OpeDB::OpeDB(QObject *parent) : QObject(parent)
 {
     this->m_db = QSqlDatabase::addDatabase("QSQLITE");
@@ -201,6 +200,14 @@ QStringList OpeDB::handleGetOnlineFriend(const char *userName)
     }
 
     return resultList;
+}
+
+bool OpeDB::handleSaveFileInfo(const protocol::FileInfo_s fileInfo)
+{
+    QString data = QString("insert into fileInfo(filename,filesize,uploadtime,uploadname) values('%1',%2,'%3','%4')").arg(fileInfo.filename).arg(fileInfo.filesize).arg(fileInfo.uploadTime.toString()).arg(fileInfo.uploadname);
+    qDebug()<<data;
+    QSqlQuery query;
+    return query.exec(data);
 }
 
 //QStringList OpeDB::handleGetFOnlineStatus(const char *username)

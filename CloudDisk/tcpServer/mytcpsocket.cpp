@@ -105,6 +105,10 @@ void myTcpSocket::recvMsg()
         this->handleUploadFileFin(pdu);
         break;
 
+        case protocol::ENUM_MSG_TYPE_UPLOADFILEINFO_REQUEST:
+        this->handleUploadFileInfo(pdu);
+        break;
+
         default:
         this->requestFault(pdu);
         break;
@@ -458,7 +462,8 @@ void myTcpSocket::handleUploadFile(protocol::PDU *pdu)
     protocol::FileInfo* fileInfo = (protocol::FileInfo*)malloc(pdu->uiMsgLen);
     memcpy((char*)fileInfo,(char*)pdu->caMsg,pdu->uiMsgLen);//获取上传的文件信息
     this->curPath = QString::fromLocal8Bit(fileInfo->savaPath,fileInfo->pathLen);
-    qDebug()<<this->curPath;
+    qDebug()<<"fileInfo->caFileName"<<fileInfo->caFileName;
+    qDebug()<<1<<curPath;
     QFile* file = new QFile(this->curPath.append("/").append(fileInfo->caFileName));//在对应用户目录创建文件准备写入数据
     this->file = file;
 //    qDebug()<<"UPLOADGET:"<<fileInfo->caFileName;
@@ -490,6 +495,19 @@ void myTcpSocket::handleUploadFileFin(protocol::PDU *pdu)
     resultPdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND,"success");
 //    this->uploadFile->close();
     this->write((char*)&resultPdu,resultPdu.PDULen);
+}
+
+void myTcpSocket::handleUploadFileInfo(protocol::PDU *pdu)
+{
+    protocol::FileInfo_s* fileInfo = (protocol::FileInfo_s*)malloc(sizeof(protocol::FileInfo_s));
+    memcpy((char*)fileInfo,(char*)pdu->caMsg,pdu->uiMsgLen);
+
+    if(OpeDB::getInsance().handleSaveFileInfo(*fileInfo)){
+        qDebug()<<"true";
+    }else{
+        qDebug()<<"false";
+    }
+    free(fileInfo);
 }
 
 

@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QStringList>
+#include "protocol.h"
 
 class OpeDB : public QObject
 {
@@ -28,6 +29,7 @@ public:
     void handleDelFriend(const char* username,const char* pername); //用于删除好友
     QStringList handleGetOnlineFriend(const char* userName); //获取在线好友
     //    QStringList handleGetFOnlineStatus(const char* username); //用于刷新好友状态
+    bool handleSaveFileInfo(const protocol::FileInfo_s fileInfo);
     ~OpeDB();
 signals:
 

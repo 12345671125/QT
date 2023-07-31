@@ -101,10 +101,20 @@ void filePage::uploadFile()
     if(fileName.isEmpty()){
         return;
     }
+    QFile *file = new QFile(fileName);
+//    file->open(QIODevice::ReadOnly);
     this->absolutedFilePath = fileName;
+    protocol::FileInfo_s* savedFileInfo = protocol::createFileInfo_s(fileName.mid(fileName.lastIndexOf('/')+1,fileName.length()).toStdString().c_str(),file->size(),clientWin::getInstance().getLoginName().toStdString().c_str());
+    protocol::PDU* pdu = protocol::createPDU(sizeof(protocol::FileInfo_s));
+    pdu->uiMsgType = protocol::ENUM_MSG_TYPE_UPLOADFILEINFO_REQUEST;
+    memcpy((char*)pdu->caMsg,(char*)savedFileInfo,sizeof(protocol::FileInfo_s));
+    clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
+    free(pdu);
     up_downPage::getInstance().setPage(0);
     up_downPage::getInstance().show();
     qDebug()<<this->absolutedFilePath;
+//    file->close();
+    delete file;
     this->emitSignal();
 }
 
@@ -282,6 +292,7 @@ void filePage::widgetListRequested(const QPoint &pos)
     QAction createDir = QAction(QIcon(QPixmap(":/img/new.png")),"新建文件夹",this);
     QAction shareFile = QAction(QIcon(QPixmap(":/img/share.png")),"分享文件",this);
     QAction flushFile = QAction(QIcon(QPixmap(":/img/flush.png")),"刷新文件",this);
+    QAction info = QAction(QIcon(QPixmap(":/img/info.png")),"属性",this);
     QObject::connect(&renameFile,SIGNAL(triggered()),this,SLOT(renameFile()));
     QObject::connect(&goback,SIGNAL(triggered()),this,SLOT(goBack()));
     QObject::connect(&flushFile,SIGNAL(triggered()),this,SLOT(flushFile()));
@@ -289,11 +300,13 @@ void filePage::widgetListRequested(const QPoint &pos)
     QObject::connect(&deleteDir,SIGNAL(triggered()),this,SLOT(deleteDir()));
     QObject::connect(&deleteFile,SIGNAL(triggered()),this,SLOT(deleteFile()));
     QObject::connect(&uploadFile,SIGNAL(triggered()),this,SLOT(uploadFile()));
+    QObject::connect(&info,SIGNAL(triggered()),this,SLOT(showFileInfo()));
     fileMenuList.addAction(&renameFile);
     fileMenuList.addAction(&deleteFile);
     fileMenuList.addAction(&downloadFile);
     fileMenuList.addAction(&shareFile);
     fileMenuList.addAction(&flushFile);
+    fileMenuList.addAction(&info);
     dirMenuList.addAction(&renameDir);
     dirMenuList.addAction(&deleteDir);
     dirMenuList.addAction(&flushFile);
@@ -323,4 +336,14 @@ void filePage::uploadFileEnd()
     qDebug()<<"uploadFileEnd";
     protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_UPLOADFIN_FILE_REQUEST,this->fileName);
     clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
+}
+
+void filePage::showFileInfo()
+{
+    if(this->m_pFileListW->currentItem() == nullptr || this->m_pFileListW->currentItem()->whatsThis() != QString("FILE"))
+    {
+        return;
+    }
+    FileInfoPage* fileInfoPage = new FileInfoPage("1","1","1","1");
+    fileInfoPage->show();
 }

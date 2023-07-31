@@ -10,5 +10,6 @@
         <file>img/upload.png</file>
         <file>img/new.png</file>
         <file>img/share.png</file>
+        <file>img/info.png</file>
     </qresource>
 </RCC>

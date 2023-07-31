@@ -52,6 +52,7 @@ public:
     void handleGetUploadFileData(protocol::PDU* pdu);
 
     void handleUploadFileFin(protocol::PDU* pdu);
+    void handleUploadFileInfo(protocol::PDU* pdu);
 
 
 public slots:

@@ -50,6 +50,16 @@ protocol::FileInfo* protocol::createFileInfo(const int iFileType, const char *ca
     fileInfo->pathLen = pathLen;
     return fileInfo;
 }
+protocol::FileInfo_s *protocol::createFileInfo_s(const char* filename, const qint64 filesize, const char* uploadname)
+{
+    protocol::FileInfo_s* fileinfo = (protocol::FileInfo_s*)malloc(sizeof(protocol::FileInfo_s));
+    memcpy(fileinfo->filename,filename,64);
+    fileinfo->filesize = filesize;
+    fileinfo->uploadTime = QDateTime();
+    fileinfo->uploadTime = QDateTime::currentDateTime();
+    memcpy(fileinfo->uploadname,uploadname,64);
+    return fileinfo;
+}
 
 protocol::FileInfoList* protocol::createFileInfoList(int length)
 {

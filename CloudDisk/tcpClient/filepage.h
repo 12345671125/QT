@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include "up_downpage.h"
+#include "fileinfopage.h"
 
 class filePage : public QWidget
 {
@@ -56,6 +57,7 @@ private slots:
     void widgetListRequested(const QPoint &pos);
     void uploadFile();
     void openUp_downPage();
+    void showFileInfo();
 };
 
 #endif // FILEPAGE_H

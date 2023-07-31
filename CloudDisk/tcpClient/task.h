@@ -9,6 +9,9 @@
 #include <QTimer>
 #include <QThread>
 #include <QHostAddress>
+#include <QWaitCondition>
+#include <QMutex>
+#include <QWaitCondition>
 
 class Task : public QObject
 {
@@ -17,13 +20,20 @@ public:
     explicit Task(QObject *parent = NULL);
     ~Task();
     void uploadFileData();
+    enum statusFlag {  //任务状态
+        START,
+        PAUSE,
+        STOP,
+    };
 
 public slots:
-    void taskStart(void);
-    void uploadData();
-    void uploadFileEnd();
-    void taskThreadinit(QString curPath,QString absolutedPath, QString address, quint16 port);
-    void uploadFile(QString curPath,QString absolutedFileName);
+    void uploadData();   //上传文件数据
+    void uploadFileEnd(); //结束上传文件
+    void taskStart();     //开始任务
+    void taskThreadinit(QString curPath,QString absolutedPath, QString address, quint16 port,QWaitCondition* waitCondition);//对象初始化
+    void uploadFile(QString curPath,QString absolutedFileName);// 发送上传文件请求
+    void pauseTask(); //暂停任务
+    void cancelTask(); //取消任务
 private:
 
     QString FileName; //文件名
@@ -32,12 +42,15 @@ private:
     QTcpSocket* clientSocket; //存放客户端socket
     QFile* file;  //文件描述符
     QTimer* updataTimer = nullptr; //用于间隔时间发送数据
-    QTimer* uploadTimer = nullptr;
-    QString absolutedPath;
+    QTimer* uploadEndTimer = nullptr; //用于发送上传文件结束请求
+    QString absolutedPath; //保存文件按绝对路径
+    QMutex* mutex; //锁  -- 用于线程挂起，实现任务暂停
+    QWaitCondition* waitCondition; //信号量 -- 用于线程挂起 实现任务暂停
+    int statusFlag;  //控制当前任务状态
 signals:
-    void updatePgBGUI(int percent);
-    void taskFin();
-    void finished();
+    void updatePgBGUI(int percent);  //更新任务进度条
+    void taskFin(); //任务结束信号1
+    void finished(); //任务结束信号2
 
 };
 

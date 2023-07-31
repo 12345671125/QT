@@ -28,7 +28,8 @@ private:
     QListWidget* downPage;
     QListWidget* switchList;
 
-
+private slots:
+    void cancelTask(QListWidgetItem* item);
 signals:
     void createTask(QString curPath,QString absolutedPath);
 
