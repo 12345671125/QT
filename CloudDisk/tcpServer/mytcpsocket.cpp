@@ -9,6 +9,17 @@ myTcpSocket::myTcpSocket()
     QObject::connect(this,SIGNAL(readyRead()),this,SLOT(recvMsg()));
     QObject::connect(this,SIGNAL(disconnected()),this,SLOT(clientOffine()));
     this->setSocketOption(QTcpSocket::KeepAliveOption,true);
+    this->downloadTimer = new QTimer(this);
+    this->downEndTimer = new QTimer(this);
+    this->downloadTimer->setInterval(20);
+    this->downEndTimer->setInterval(500);
+    connect(downloadTimer,SIGNAL(timeout()),this,SLOT(sendFileData()));
+    connect(downEndTimer,SIGNAL(timeout()),this,SLOT(sendFileEnd()));
+    this->curSize = 0;
+    this->totalSize = 0;
+//    this->setReadBufferSize(4096);
+    this->buffer = (char*)malloc(4096);
+    memset(this->buffer,0,4096);
 }
 
 QString myTcpSocket::getName()
@@ -108,6 +119,18 @@ void myTcpSocket::recvMsg()
         case protocol::ENUM_MSG_TYPE_UPLOADFILEINFO_REQUEST:
         this->handleUploadFileInfo(pdu);
         break;
+
+        case protocol::ENUM_MSG_TYPE_GETFILEINFO_REQUEST:
+        this->handleGetFileInfo(pdu);
+        break;
+
+        case protocol::ENUM_MSG_TYPE_DOWNLOAD_FILE_REQUEST:
+        this->handleDownFile(pdu);
+        break;
+
+//        case protocol::ENUM_MSG_TYPE_DOWNLOADREADY_FILE_REQUEST:
+//        this->ReadytoSendFile(pdu);
+//        break;
 
         default:
         this->requestFault(pdu);
@@ -291,6 +314,7 @@ void myTcpSocket::handleDelFriend(protocol::PDU *pdu)
 
 void myTcpSocket::handlePrivateChat(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
 //    qDebug()<<"handlePrivateChat";
     char username[64] = {"\0"};
     char pername[64] = {"\0"};
@@ -322,6 +346,7 @@ void myTcpSocket::handlePublicChat(protocol::PDU *pdu)
 
 void myTcpSocket::handleCreateDir(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
     QDir dir;
     QString strCurPath = QString("%1").arg((char*)(pdu->caMsg));
     bool ret = dir.exists(strCurPath);
@@ -389,6 +414,7 @@ void myTcpSocket::handleFlushFile(protocol::PDU *pdu)
 
 void myTcpSocket::handleDelDir(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
     QString curPath = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen);
     char DirName[64] = {'\0'};
     memcpy(DirName,pdu->caData,64);
@@ -414,6 +440,7 @@ void myTcpSocket::handleDelDir(protocol::PDU *pdu)
 
 void myTcpSocket::handleDelFile(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
     QString curPath = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen);
     char FileName[64] = {'\0'};
     memcpy(FileName,pdu->caData,64);
@@ -435,6 +462,7 @@ void myTcpSocket::handleDelFile(protocol::PDU *pdu)
 
 void myTcpSocket::handleReNameFile(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
     QString curPath = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen);
     char oldFileName[64] = {'\0'};
     char newFileName[64] = {'\0'};
@@ -473,6 +501,8 @@ void myTcpSocket::handleUploadFile(protocol::PDU *pdu)
 
 void myTcpSocket::handleGetUploadFileData(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
+
     char fileName[64] = {'\0'};
     memcpy(fileName,pdu->caData,64);
     if(this->file == NULL){
@@ -487,6 +517,7 @@ void myTcpSocket::handleGetUploadFileData(protocol::PDU *pdu)
 
 void myTcpSocket::handleUploadFileFin(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
 
     char fileName[64] = {'\0'};
     memcpy(fileName,pdu->caData,64);
@@ -499,6 +530,7 @@ void myTcpSocket::handleUploadFileFin(protocol::PDU *pdu)
 
 void myTcpSocket::handleUploadFileInfo(protocol::PDU *pdu)
 {
+    if(pdu == NULL) return;
     protocol::FileInfo_s* fileInfo = (protocol::FileInfo_s*)malloc(sizeof(protocol::FileInfo_s));
     memcpy((char*)fileInfo,(char*)pdu->caMsg,pdu->uiMsgLen);
 
@@ -508,6 +540,112 @@ void myTcpSocket::handleUploadFileInfo(protocol::PDU *pdu)
         qDebug()<<"false";
     }
     free(fileInfo);
+}
+
+void myTcpSocket::handleGetFileInfo(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+    char username[64] = {'\0'};
+    char fileName[64] = {'\0'};
+    memcpy(username,pdu->caData,64);
+    memcpy(fileName,pdu->caData+64,64);
+    QStringList result = OpeDB::getInsance().handleGetFileInfo(username,fileName);
+    protocol::PDU* resultpdu = nullptr;
+    if(result.isEmpty()){
+        resultpdu = protocol::createPDU(0);
+        resultpdu->uiMsgType = protocol::ENUM_MSG_TYPE_GETFILEINFO_RESPOND;
+        memcpy(resultpdu->caData,"error",6);
+        this->write((char*)resultpdu,resultpdu->PDULen);
+    }else{
+        int dataLen = 0;
+        for(QString i : result){
+            dataLen+=i.length();
+        }
+        protocol::FileDetail* fileDetail = (protocol::FileDetail*)malloc(sizeof(protocol::FileDetail) + dataLen);
+        char* temp = fileDetail->data;
+        fileDetail->filenameLen = result[0].length();
+        fileDetail->fileSizeLen = result[1].length();
+        fileDetail->uploadTimeLen = result[2].length();
+        fileDetail->uploaduserLen = result[3].length();
+        for(int i = 0;i<result.length();i++){
+            if(i == 0){
+                memcpy(fileDetail->data,result[i].toStdString().c_str(),result[i].length());
+            }else{
+                temp+=result[i-1].length();
+                memcpy(temp,result[i].toStdString().c_str(),result[i].length());
+            }
+        }
+        resultpdu = protocol::createPDU(dataLen + sizeof(protocol::FileDetail));
+        resultpdu->uiMsgType = protocol::ENUM_MSG_TYPE_GETFILEINFO_RESPOND;
+        memcpy((char*)resultpdu->caMsg,(char*)fileDetail,resultpdu->uiMsgLen);
+        this->write((char*)resultpdu,resultpdu->PDULen);
+    }
+    free(resultpdu);
+    resultpdu = nullptr;
+}
+
+void myTcpSocket::handleDownFile(protocol::PDU *pdu)
+{
+    if(pdu == NULL) return;
+
+//    qDebug()<<this->curPath+'/'+downLoadfilename;
+    QString absolutedFilename = QString::fromLocal8Bit((char*)pdu->caMsg,pdu->uiMsgLen-1);
+    qDebug()<< absolutedFilename;
+    this->downloadFile = new QFile(absolutedFilename);
+    protocol::PDU resultPdu;
+    if(!downloadFile->exists()){
+        resultPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DOWNLOADGET_FILE_RESPOND,"file is not exists!");
+        return;
+    }else{
+        this->totalSize = this->downloadFile->size();
+        resultPdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DOWNLOADGET_FILE_RESPOND,"OK");
+    }
+    this->write((char*)&resultPdu,resultPdu.PDULen);
+    this->downloadFile->open(QIODevice::ReadOnly);
+    this->downloadTimer->start();
+}
+
+//void myTcpSocket::ReadytoSendFile(protocol::PDU *pdu)
+//{
+//    qDebug()<<"ReadytoSendFile";
+//}
+
+void myTcpSocket::sendFileData()
+{
+    protocol::PDU* pdu = nullptr;
+    qint64 ret = 0;
+    this->downloadFile->fileName();
+//     qDebug()<<this->downloadFile->size();
+    ret = this->downloadFile->read(this->buffer,4096); //循环的中文件中读数据,一次读4096B
+    curSize +=ret;
+//    qDebug()<<ret;
+    if(ret > 0 && ret <= 4096){ //如果文件中余有字节
+        double percent = (((double)this->curSize/this->totalSize) * 100);
+        QString strPercent = QString("%1").arg(percent);
+        strPercent.append('\0');
+        qDebug()<<strPercent;
+        pdu = protocol::createPDU(ret);
+        pdu->uiMsgType = protocol::ENUM_MSG_TYPE_DOWNLOADBEG_FILE_RESPOND;
+        memcpy((char*)pdu->caMsg,this->buffer,ret);
+        memcpy((char*)pdu->caData,strPercent.toStdString().c_str(),strPercent.length());
+        this->write((char*)pdu,pdu->PDULen);
+    }else if(ret == 0) //如果已经到达文件尾
+    {
+        this->downloadTimer->stop(); //停止上传数据定时器
+        this->downloadFile->close(); //关闭文件
+        delete downloadFile;
+        this->downloadFile = nullptr;
+        this->downEndTimer->start();
+    }
+    memset(this->buffer,0,4096);
+    free(pdu);
+}
+
+void myTcpSocket::sendFileEnd()
+{
+    this->downEndTimer->stop();
+    protocol::PDU pdu = protocol::PDU::default_respond(protocol::ENUM_MSG_TYPE_DOWNLOADFIN_FILE_RESPOND,"END");
+    this->write((char*)&pdu,pdu.PDULen);
 }
 
 

@@ -22,6 +22,7 @@ public:
     void updateFileList(protocol::PDU* pdu);
     static filePage& getInstance();
     void emitSignal();
+    void emitDownLoadSignal(protocol::PDU* pdu);
 
 
 public slots:
@@ -33,6 +34,8 @@ public slots:
     void deleteFile();
     void renameFile();
     void uploadFileEnd();
+    void showFileInfo(protocol::PDU* pdu);
+    void downLoadFile();
 
 private:
     QListWidget* m_pFileListW;
@@ -49,15 +52,18 @@ private:
     QString uploadFileName;
     QFile* uploadfile;  //记录上传文件
     QString fileName;
+    QString absolutedDonwloadFileName;
+
 
 signals:
     void createFileItem(QString curPath,QString absolutedFilePath);
+    void createDownLoadFileItem(QString ServerfileName,QString absolutedFileName);
 
 private slots:
     void widgetListRequested(const QPoint &pos);
     void uploadFile();
     void openUp_downPage();
-    void showFileInfo();
+    void getFileInfo();
 };
 
 #endif // FILEPAGE_H

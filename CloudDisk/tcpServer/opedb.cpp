@@ -210,6 +210,27 @@ bool OpeDB::handleSaveFileInfo(const protocol::FileInfo_s fileInfo)
     return query.exec(data);
 }
 
+QStringList OpeDB::handleGetFileInfo(const char *username, const char *filename)
+{
+    QStringList result = QStringList();
+    result.clear();
+    if(username == NULL || filename == NULL) return result;
+    QString data = QString("select filename,filesize,uploadtime,uploadname from fileInfo where filename = '%1' and uploadname = '%2'").arg(filename).arg(username);
+    QSqlQuery query;
+    qDebug()<<data;
+    query.exec(data);
+    if(query.next()){
+        result.push_back(query.value(0).toString());
+        result.push_back(query.value(1).toString());
+        result.push_back(query.value(2).toString());
+        result.push_back(query.value(3).toString());
+    }
+    return result;
+
+}
+
+
+
 //QStringList OpeDB::handleGetFOnlineStatus(const char *username)
 //{
 //    QStringList resultList;

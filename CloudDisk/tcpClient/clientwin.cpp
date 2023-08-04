@@ -203,6 +203,19 @@ void clientWin::recvMsg()
         break;
     }
 
+    case protocol::ENUM_MSG_TYPE_GETFILEINFO_RESPOND:
+    {
+        qDebug()<<"showFileInfo(pdu)";
+        OpeWidget::getinstance().getfilePage()->showFileInfo(pdu);
+        break;
+    }
+
+//    case protocol::ENUM_MSG_TYPE_DOWNLOADGET_FILE_RESPOND:
+//    {
+//        OpeWidget::getinstance().getfilePage()->emitDownLoadSignal(pdu);
+//        break;
+//    }
+
     case protocol::ENUM_MSG_TYPE_ERROR_RESPOND:
     {
         QMessageBox::critical(this,"ERROR","请求错误!,请联系管理员");

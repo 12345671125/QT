@@ -34,6 +34,7 @@ void Task::taskThreadinit(QString curPath,QString absolutedPath,QString address,
     /*以下为成员数据初始化*/
     this->file = new QFile(absolutedPath,this);
     this->clientSocket = new QTcpSocket(this);
+//    this->clientSocket->setReadBufferSize(4096);
     this->uploadEndTimer = new QTimer(this);
     this->updataTimer = new QTimer(this);
     this->clientSocket->connectToHost(QHostAddress(address),port); //使用客户端的socketDecs来构造任务类的socket,使其单独与服务器通信;
@@ -42,7 +43,7 @@ void Task::taskThreadinit(QString curPath,QString absolutedPath,QString address,
     this->FileName = loFileName.append('\0');
     this->totalFileSize = file->size();
     this->curFileSize = 0;
-    this->uploadEndTimer->setInterval(100);
+    this->uploadEndTimer->setInterval(250);
     this->updataTimer->setInterval(15);
     this->curFileSize = 0;
     uploadFile(curPath,absolutedPath);
@@ -77,6 +78,7 @@ void Task::uploadFile(QString curPath,QString absolutedfileName)
     fileInfo = nullptr;
     connect(updataTimer,SIGNAL(timeout()),this,SLOT(uploadData())); //连接定时器信号和对应的槽函数
     connect(uploadEndTimer,SIGNAL(timeout()),this,SLOT(uploadFileEnd())); //连接定时器信号和对应的槽函数
+    this->taskStart();
 }
 void Task::uploadFileData()
 {

@@ -1,6 +1,7 @@
 #include "itemui.h"
 #include "opewidget.h"
 #include "clientwin.h"
+#include <downLoadTask.h>
 
 ItemUI::ItemUI(QString FileName,int width,int height,QWidget *parent)
     : QWidget{parent}
@@ -54,8 +55,9 @@ void ItemUI::createTask(QString curPath,QString absolutedPath)   //创建任务�
 
     /*以下为信号和槽函数的连接*/
 
-    QObject::connect(this,SIGNAL(taskStart()),task,SLOT(taskStart()));
-    QObject::connect(this,SIGNAL(taskThreadinit(QString,QString,QString,quint16,QWaitCondition*)),task,SLOT(taskThreadinit(QString,QString,QString,quint16,QWaitCondition*)));
+//    QObject::connect(this,SIGNAL(uploadTaskStart()),task,SLOT(taskStart()));
+    QObject::connect(this,SIGNAL(uploadTaskThreadinit(QString,QString,QString,quint16,QWaitCondition*)),task,SLOT(taskThreadinit(QString,QString,QString,quint16,QWaitCondition*)));
+//    QObject::connect(this,SIGNAL(uploadTaskStart()),task,SLOT(taskStart()));
     QObject::connect(task,SIGNAL(updatePgBGUI(int)),this,SLOT(updatePgBGUI(int))); //单例模式在成员函数中重复信号槽的连接会导致信号的重复发送
     QObject::connect(task,SIGNAL(taskFin()),OpeWidget::getinstance().getfilePage(),SLOT(uploadFileEnd()));
     QObject::connect(task,SIGNAL(finished()),workThread,SLOT(quit()));
@@ -69,8 +71,8 @@ void ItemUI::createTask(QString curPath,QString absolutedPath)   //创建任务�
     QString address = clientWin::getInstance().getServerIp();  //获取服务器地址
     quint16 port = clientWin::getInstance().getServerPort();  //获取服务器ip
     workThread->start(); //启动线程
-    emit taskThreadinit(curPath,absolutedPath,address,port,this->WaitCondition); //发送任务初始化信号,使任务对象初始化
-    emit taskStart(); //发送开始任务信号
+    emit uploadTaskThreadinit(curPath,absolutedPath,address,port,this->WaitCondition); //发送任务初始化信号,使任务对象初始化
+//    emit uploadTaskStart(); //发送开始任务信号
 
 }
 
@@ -100,6 +102,34 @@ void ItemUI::taskFin()
 {
     this->stopBtn->setEnabled(false);
     this->cancelBtn->setText("关闭");
+}
+
+void ItemUI::createDownloadTask(QString ServerfilePath,QString absolutedFileName)
+{
+    qDebug()<<"main ThreadID:"<<QThread::currentThreadId();
+    downLoadTask *task = new downLoadTask(NULL); //创建任务对象
+    QThread* workThread = new QThread(this); //创建工作线程  --使用线程池可以减少创建销毁线程的开销
+
+    /*以下为信号和槽函数的连接*/
+
+//    QObject::connect(this,SIGNAL(downloadTaskStart()),task,SLOT(taskStart()));
+    QObject::connect(this,SIGNAL(downloadTaskThreadinit(QString,QString,QString,quint16,QWaitCondition*)),task,SLOT(taskThreadinit(QString,QString,QString,quint16,QWaitCondition*)));
+    QObject::connect(task,SIGNAL(updatePgBGUI(int)),this,SLOT(updatePgBGUI(int))); //单例模式在成员函数中重复信号槽的连接会导致信号的重复发送
+    QObject::connect(task,SIGNAL(taskFin()),OpeWidget::getinstance().getfilePage(),SLOT(uploadFileEnd()));
+    QObject::connect(task,SIGNAL(finished()),workThread,SLOT(quit()));
+    QObject::connect(task,SIGNAL(taskFin()),this,SLOT(taskFin()));
+    QObject::connect(stopBtn,SIGNAL(clicked()),task,SLOT(pauseTask()));
+    QObject::connect(cancelBtn,SIGNAL(clicked()),task,SLOT(cancelTask()));
+    QObject::connect(cancelBtn,SIGNAL(clicked()),this,SLOT(cancelTask()));
+    QObject::connect(stopBtn,SIGNAL(clicked()),this,SLOT(switchBtnText()));
+
+    task->moveToThread(workThread);  //将task对象移入workThread线程中
+    QString address = clientWin::getInstance().getServerIp();  //获取服务器地址
+    quint16 port = clientWin::getInstance().getServerPort();  //获取服务器ip
+    workThread->start(); //启动线程
+    qDebug()<<"void ItemUI::createDownloadTask(QString absolutedFileName)";
+    emit downloadTaskThreadinit(ServerfilePath,absolutedFileName,address,port,this->WaitCondition); //发送任务初始化信号,使任务对象初始化
+//    emit downloadTaskStart(); //发送开始任务信号
 }
 
 

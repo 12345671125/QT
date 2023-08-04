@@ -39,10 +39,13 @@ private slots:
    void switchBtnText(void);  //用于切换按钮文本 开始-停止
    void cancelTask(void);  //用于取消任务
    void taskFin(void);
+   void createDownloadTask(QString ServerfilePath,QString absolutedFileName);
 signals:
     void setItem(QListWidgetItem*,QWidget*);   //发往up_down页面用于将ui插入ListWidget
-    void taskStart(void); //发送任务开始信号
-    void taskThreadinit(QString,QString,QString,quint16,QWaitCondition*);//初始化任务对象信号
+    void uploadTaskStart(void); //发送任务开始信号
+    void uploadTaskThreadinit(QString,QString,QString,quint16,QWaitCondition*);//初始化任务对象信号
+//    void downloadTaskStart(void); //发送任务开始信号
+    void downloadTaskThreadinit(QString,QString,QString,quint16,QWaitCondition*);//初始化任务对象信号
     void cancelTask(QListWidgetItem*); //发往up_down页面用于取消任务
 };
 

@@ -22,6 +22,7 @@ public:
     void setPage(int index);
 public slots:
     void createFileItem(QString curPath,QString absolutedPath);
+    void createDownloadFileItem(QString ServerfilePath,QString absolutedFileName);
 private:
     QStackedWidget* stackedWidget;
     QListWidget* upPage;
@@ -32,6 +33,7 @@ private slots:
     void cancelTask(QListWidgetItem* item);
 signals:
     void createTask(QString curPath,QString absolutedPath);
+    void createDownloadTask(QString ServerfilePath,QString absolutedFileName);
 
 
 private slots:

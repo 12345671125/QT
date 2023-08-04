@@ -51,6 +51,8 @@ filePage::filePage(QWidget *parent)
     connect(m_pUpLoadFilePB,SIGNAL(clicked(bool)),this,SLOT(uploadFile()));
     connect(this,SIGNAL(createFileItem(QString,QString)),&(up_downPage::getInstance()),SLOT(createFileItem(QString,QString)));
     connect(m_pShareFilePB,SIGNAL(clicked()),this,SLOT(openUp_downPage()));
+    connect(m_pDownLoadPB,SIGNAL(clicked()),this,SLOT(downLoadFile()));
+    connect(this,SIGNAL(createDownLoadFileItem(QString,QString)),&(up_downPage::getInstance()),SLOT(createDownloadFileItem(QString,QString)));
 
     this->m_pFileListW->setContextMenuPolicy(Qt::CustomContextMenu); //添加菜单策略
 
@@ -94,6 +96,22 @@ void filePage::emitSignal()
 {
     emit createFileItem(clientWin::getInstance().curPath(),this->absolutedFilePath);
 }
+
+//void filePage::emitDownLoadSignal(protocol::PDU* pdu)
+//{
+//    if(this->absolutedDonwloadFileName.isEmpty()){
+//        return;
+//    }
+//    char message[64] = {'\0'};
+//    memcpy(message,pdu->caData,64);
+
+//   /* if(strcpy(message,"OK") == 0){
+
+//    }*//*else{
+//        qDebug()<<"所选文件不存在!";
+//    }*/
+
+//}
 
 void filePage::uploadFile()
 {
@@ -300,7 +318,8 @@ void filePage::widgetListRequested(const QPoint &pos)
     QObject::connect(&deleteDir,SIGNAL(triggered()),this,SLOT(deleteDir()));
     QObject::connect(&deleteFile,SIGNAL(triggered()),this,SLOT(deleteFile()));
     QObject::connect(&uploadFile,SIGNAL(triggered()),this,SLOT(uploadFile()));
-    QObject::connect(&info,SIGNAL(triggered()),this,SLOT(showFileInfo()));
+    QObject::connect(&info,SIGNAL(triggered()),this,SLOT(getFileInfo()));
+    QObject::connect(&downloadFile,SIGNAL(triggered()),this,SLOT(downLoadFile()));
     fileMenuList.addAction(&renameFile);
     fileMenuList.addAction(&deleteFile);
     fileMenuList.addAction(&downloadFile);
@@ -338,12 +357,42 @@ void filePage::uploadFileEnd()
     clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
 }
 
-void filePage::showFileInfo()
+void filePage::getFileInfo()
 {
-    if(this->m_pFileListW->currentItem() == nullptr || this->m_pFileListW->currentItem()->whatsThis() != QString("FILE"))
-    {
+    QString filename = QString::fromLocal8Bit(this->m_pFileListW->currentItem()->text().toStdString().c_str(),this->m_pFileListW->currentItem()->text().length());
+    filename = filename.append('\0');
+    protocol::PDU pdu = protocol::PDU::default_request(protocol::ENUM_MSG_TYPE_GETFILEINFO_REQUEST,"");
+    memcpy(pdu.caData,clientWin::getInstance().getLoginName().append('\0').toStdString().c_str(),clientWin::getInstance().getLoginName().length());
+    memcpy(pdu.caData+64,filename.toStdString().c_str(),filename.length());
+    clientWin::getInstance().getTcpSocket().write((char*)&pdu,pdu.PDULen);
+}
+
+void filePage::showFileInfo(protocol::PDU* pdu)
+{
+    if(pdu == NULL) return;
+    if(pdu->uiMsgLen == 0){
+        QMessageBox::critical(this,"error!","获取文件信息时出现未知错误！");
         return;
     }
-    FileInfoPage* fileInfoPage = new FileInfoPage("1","1","1","1");
+    protocol::FileDetail* fileDetail = (protocol::FileDetail*)malloc(pdu->uiMsgLen);
+    memcpy((char*)fileDetail,(char*)pdu->caMsg,pdu->uiMsgLen);
+    QString filename = QString::fromLocal8Bit(fileDetail->data,fileDetail->filenameLen);
+    QString filesize = QString::fromLocal8Bit(fileDetail->data+fileDetail->filenameLen,fileDetail->fileSizeLen);
+    QString uploadTime = QString::fromLocal8Bit(fileDetail->data+fileDetail->filenameLen+fileDetail->fileSizeLen,fileDetail->uploadTimeLen);
+    QString uploaduser = QString::fromLocal8Bit(fileDetail->data+fileDetail->filenameLen+fileDetail->fileSizeLen+fileDetail->uploadTimeLen,fileDetail->uploaduserLen);
+    FileInfoPage *fileInfoPage = new FileInfoPage(filename,filesize,uploadTime,uploaduser);
     fileInfoPage->show();
+}
+
+void filePage::downLoadFile()
+{
+    QString defaultFileName = this->m_pFileListW->currentItem()->text();
+    defaultFileName.append('\0');
+    QString savedPath = QFileDialog::getSaveFileName(this,"下载文件",defaultFileName);
+    if(savedPath.isEmpty()){
+        return;
+    }
+    QString ServerfilePath = clientWin::getInstance().curPath() + '/' + defaultFileName;
+    this->absolutedDonwloadFileName = savedPath;
+    emit createDownLoadFileItem(ServerfilePath,this->absolutedDonwloadFileName);
 }

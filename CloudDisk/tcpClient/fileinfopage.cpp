@@ -7,14 +7,15 @@ FileInfoPage::FileInfoPage(QString FileName,QString FileSize,QString createdTime
 {
     ui->setupUi(this);
     this->FileName = FileName;
-    this->FileSize = FileSize;
+    double size  = ((double)FileSize.toInt()/1024/1024);
+    this->FileSize = QString("%1").arg(size);
     this->createdTime = createdTime;
     this->location = location;
-    this->ui->label->setText(FileName.append("的属性"));
+    this->ui->label->setText("INFO");
     this->ui->listWidget->addItem("文件名 : " + this->FileName);
-    this->ui->listWidget->addItem("文件大小 : " + this->FileSize);
+    this->ui->listWidget->addItem("文件大小 : " + this->FileSize + "MB");
     this->ui->listWidget->addItem("创建时间 : " + this->createdTime);
-    this->ui->listWidget->addItem("文件路径 : " + this->location);
+    this->ui->listWidget->addItem("上传人 : " + this->location);
 }
 
 FileInfoPage::~FileInfoPage()

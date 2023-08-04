@@ -10,6 +10,8 @@
 #include <QFileInfoList>
 #include <QFile>
 #include <QVector>
+#include <QTimer>
+
 
 class myTcpSocket : public QTcpSocket
 {
@@ -17,6 +19,7 @@ class myTcpSocket : public QTcpSocket
 public:
     myTcpSocket();
     QString getName();
+    char* buffer;
     void login(protocol::PDU* pdu);
 
     void showOnline(protocol::PDU* pdu);
@@ -52,13 +55,22 @@ public:
     void handleGetUploadFileData(protocol::PDU* pdu);
 
     void handleUploadFileFin(protocol::PDU* pdu);
+
     void handleUploadFileInfo(protocol::PDU* pdu);
+
+    void handleGetFileInfo(protocol::PDU* pdu);
+
+    void handleDownFile(protocol::PDU* pdu);
+
+//    void ReadytoSendFile(protocol::PDU* pdu);
 
 
 public slots:
     void recvMsg();//用于处理请求
     void regist(protocol::PDU* pdu);//用于处理注册
     void clientOffine();
+    void sendFileData();
+    void sendFileEnd();
     //    void respond(PDU* pdu); //用于回复
 
     //    void handleGetFOnlineStatus(PDU * pdu);
@@ -69,6 +81,11 @@ private:
     QString m_strName;
     QFile* file = NULL;
     QString curPath;
+    QFile* downloadFile;
+    QTimer* downloadTimer;
+    QTimer* downEndTimer;
+    qint64 totalSize;
+    qint64 curSize;
 };
 
 #endif // MYTCPSOCKET_H

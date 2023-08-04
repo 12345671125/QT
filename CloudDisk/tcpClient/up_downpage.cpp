@@ -51,6 +51,20 @@ void up_downPage::createFileItem(QString curPath,QString absolutedPath)
     disconnect(this,SIGNAL(createTask(QString,QString)),itemui,SLOT(createTask(QString,QString)));
 }
 
+void up_downPage::createDownloadFileItem(QString ServerfilePath,QString absolutedFileName)
+{
+    qDebug()<<"createDownloadFileItem";
+    this->stackedWidget->setCurrentIndex(1);
+
+    QString FileName = absolutedFileName.mid(absolutedFileName.lastIndexOf("/")+1,absolutedFileName.length()-1);
+    ItemUI* itemui = new ItemUI(FileName,this->upPage->width()-40,30,this);
+    connect(itemui,SIGNAL(cancelTask(QListWidgetItem*)),this,SLOT(cancelTask(QListWidgetItem*)));
+    connect(this,SIGNAL(createDownloadTask(QString,QString)),itemui,SLOT(createDownloadTask(QString,QString)));
+    this->downPage->addItem(itemui->getListWidgetItem());
+    this->downPage->setItemWidget(itemui->getListWidgetItem(),itemui->getWidget());
+    emit createDownloadTask(ServerfilePath,absolutedFileName);
+    disconnect(this,SIGNAL(createDownloadTask(QString,QString)),itemui,SLOT(createDownloadTask(QString,QString)));
+}
 void up_downPage::cancelTask(QListWidgetItem* item)
 {
     QModelIndex index  = this->upPage->indexFromItem(item);

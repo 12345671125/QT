@@ -83,13 +83,23 @@ enum ENUM_MSG_TYPE{
     ENUM_MSG_TYPE_RENAME_FILE_RESPOND, //文件重命名回复
 
     ENUM_MSG_TYPE_UPLOADFILEINFO_REQUEST, //上传文件信息请求
-    ENUM_MSG_TYPE_UPLOADFILEINFO_RESPOND, //上传文件信息请求
+    ENUM_MSG_TYPE_UPLOADFILEINFO_RESPOND, //上传文件信息回复
+
+    ENUM_MSG_TYPE_GETFILEINFO_REQUEST, //文件信息请求
+    ENUM_MSG_TYPE_GETFILEINFO_RESPOND, //文件信息回复
 
     ENUM_MSG_TYPE_UPLOAD_FILE_REQUEST, //上传文件请求
     ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND, //服务器得到上传文件请求
     ENUM_MSG_TYPE_UPLOADBEG_FILE_REQUEST, //客户端上传文件开始请求
     ENUM_MSG_TYPE_UPLOADFIN_FILE_REQUEST, //客户端上传文件结束请求
     ENUM_MSG_TYPE_UPLOADFIN_FILE_RESPOND, //上传文件结束回复
+
+    ENUM_MSG_TYPE_DOWNLOAD_FILE_REQUEST, //下载文件请求
+    ENUM_MSG_TYPE_DOWNLOADGET_FILE_RESPOND, //服务器得到下载文件请求
+    ENUM_MSG_TYPE_DOWNLOADBEG_FILE_RESPOND, //服务器开始发送文件回复
+    ENUM_MSG_TYPE_DOWNLOADREADY_FILE_REQUEST, //客户端已准备接收文件请求
+    ENUM_MSG_TYPE_DOWNLOADFIN_FILE_REQUEST, //接收文件结束请求
+    ENUM_MSG_TYPE_DOWNLOADFIN_FILE_RESPOND, //服务器发送文件结束回复
 
 
     ENUM_MSG_TYPE_ERROR_RESPOND,  //严重请求错误
@@ -128,6 +138,14 @@ struct FileInfoList
     int FileListSize; //总文件数组大小
     int structSize;   //总文件结构体大小
     protocol::FileInfo FileList[];  //具体文件数组
+};
+struct FileDetail
+{
+    int filenameLen;
+    int fileSizeLen;
+    int uploadTimeLen;
+    int uploaduserLen;
+    char data[];
 };
 
 PDU* createPDU(uint uiMsgLen);
