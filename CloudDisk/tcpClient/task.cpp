@@ -12,10 +12,6 @@ Task::Task(QObject *parent)
 Task::~Task()  //析构函数
 {
     qDebug()<<QThread::currentThreadId()<<"析构";
-    delete this->clientSocket;
-    delete this->file;
-    delete this->updataTimer;
-    delete this->uploadEndTimer;
 //    delete this->waitCondition;
     delete this->mutex;
     QThread::currentThread()->quit();
@@ -23,6 +19,7 @@ Task::~Task()  //析构函数
 }
 void Task::taskThreadinit(QString curPath,QString absolutedPath,QString address,quint16 port,QWaitCondition* waitCondition)
 {
+    qDebug()<<"taskThreadinit";
     this->statusFlag = Task::START;
     this->mutex = new QMutex(); //锁初始化
     this->waitCondition = waitCondition;
@@ -51,11 +48,11 @@ void Task::taskThreadinit(QString curPath,QString absolutedPath,QString address,
 
 void Task::uploadFile(QString curPath,QString absolutedfileName)
 {
+    qDebug()<<"uploadFile";
     QFile file = QFile(absolutedfileName); //创建文件对象 获取文件句柄
-//    file.open(QFile::ReadOnly); //以只读的方式打开文件
-//    qDebug()<<file.size();
     QString loFileName = absolutedfileName.mid(absolutedfileName.lastIndexOf("/")+1,absolutedfileName.length()-1);
     loFileName = loFileName.append('\0');
+    this->serverFilePath = curPath + '/' + loFileName;
 //    qDebug()<<loFileName;
     QString curpath = curPath;
     curPath.append('\0');
@@ -76,12 +73,11 @@ void Task::uploadFile(QString curPath,QString absolutedfileName)
     pdu = nullptr;
     free(fileInfo);
     fileInfo = nullptr;
-    connect(updataTimer,SIGNAL(timeout()),this,SLOT(uploadData())); //连接定时器信号和对应的槽函数
-    connect(uploadEndTimer,SIGNAL(timeout()),this,SLOT(uploadFileEnd())); //连接定时器信号和对应的槽函数
-    this->taskStart();
+    connect(clientSocket,SIGNAL(readyRead()),this,SLOT(recvMsg()));
 }
 void Task::uploadFileData()
 {
+    qDebug()<<"uploadFileData";
     if(!this->file->open(QIODevice::ReadOnly) || this->FileName.isEmpty()){    //如果文件打开失败或者文件名为空
         QMessageBox::warning(NULL,"上传文件","打开文件失败");
         this->file = nullptr;
@@ -94,6 +90,7 @@ void Task::uploadFileData()
 
 void Task::uploadData()
 {
+    qDebug()<<"uploadData";
     char* pBuffer = new char[4096]; //数据缓冲区
     protocol::PDU* pdu = nullptr;
     qint64 ret = 0;
@@ -106,6 +103,7 @@ void Task::uploadData()
         memcpy(pdu->caData,this->FileName.toStdString().c_str(),this->FileName.length());
         memcpy((char*)pdu->caMsg,pBuffer,ret);
         this->clientSocket->write((char*)pdu,pdu->PDULen);
+        this->clientSocket->flush();
         this->curFileSize+=ret;
         emit updatePgBGUI(int(((double)curFileSize/totalFileSize) * 100));
     }else if(ret == 0) //如果已经到达文件尾
@@ -120,17 +118,19 @@ void Task::uploadData()
 
 void Task::uploadFileEnd()
 {
+    qDebug()<<"uploadFileEnd";
     this->uploadEndTimer->stop();
     emit taskFin();
     qDebug()<<QThread::currentThreadId()<<"emit finished";
     emit finished();
-    this->~Task();
+//    this->~Task();
 
     //    qDebug()<<"Task::uploadFileEnd";
 }
 
 void Task::pauseTask()  //暂停任务
 {
+     qDebug()<<"pauseTask";
 //    qDebug()<<"1pauseTask";
     if(this->statusFlag == Task::START){  //如果文件状态为开始
         this->statusFlag = Task::PAUSE; //将文件状态改为暂停
@@ -151,9 +151,47 @@ void Task::pauseTask()  //暂停任务
 
 void Task::cancelTask()
 {
+    QString cancelFilePath = this->serverFilePath;
+    emit delUnaccomplishedFile(cancelFilePath);
     this->~Task();
+}
+
+void Task::recvMsg()
+{
+    qDebug()<<"recvMsg";
+    uint PDULen = 0;
+    this->clientSocket->read((char*)&PDULen,sizeof(uint)); //para1:数据存放的地址，para2:读出的数据大小，读出uint字节的大小，这个uint为总的数据大小
+    uint uiMsgLen = PDULen - sizeof(protocol::PDU); //用总的数据大小减去protocol::PDU结构体的默认，获取实际消息长度
+    protocol::PDU* pdu = protocol::createPDU(uiMsgLen); //创建协议结构体，用于接收数据
+    this->clientSocket->read((char*)pdu + sizeof (uint),PDULen-sizeof (uint)); /*让指针偏移来读取剩下的数据大小,先将pdu的指针类型转换为了char类型的指针*/
+    switch (pdu->uiMsgType) {
+    case protocol::ENUM_MSG_TYPE_UPLOADGET_FILE_RESPOND:
+    {
+        char respondMsg[64] = {"\0"};
+        memcpy(respondMsg,pdu->caData,64);
+        qDebug()<<respondMsg;
+        if(strcmp(respondMsg,"FILE EXIST") == 0){
+//            this->uploadFileEnd();
+            emit taskTerminate();
+            emit taskFin();
+            emit finished();
+            free(pdu);
+            pdu = nullptr;
+//            this->~Task();
+        }else{
+            connect(updataTimer,SIGNAL(timeout()),this,SLOT(uploadData())); //连接定时器信号和对应的槽函数
+            connect(uploadEndTimer,SIGNAL(timeout()),this,SLOT(uploadFileEnd())); //连接定时器信号和对应的槽函数
+            this->taskStart();
+        }
+    }
+
+        break;
+    default:
+        break;
+    }
 }
 void Task::taskStart()
 {
+    qDebug()<<"taskStart";
     this->uploadFileData();
 }

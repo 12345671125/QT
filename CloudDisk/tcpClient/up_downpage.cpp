@@ -41,6 +41,7 @@ void up_downPage::setPage(int index)
 
 void up_downPage::createFileItem(QString curPath,QString absolutedPath)
 {
+    qDebug()<<"createFileItem";
     QString FileName = absolutedPath.mid(absolutedPath.lastIndexOf("/")+1,absolutedPath.length()-1);
     ItemUI* itemui = new ItemUI(FileName,this->upPage->width()-40,30,this);
     connect(itemui,SIGNAL(cancelTask(QListWidgetItem*)),this,SLOT(cancelTask(QListWidgetItem*)));
@@ -68,8 +69,6 @@ void up_downPage::createDownloadFileItem(QString ServerfilePath,QString absolute
 void up_downPage::cancelTask(QListWidgetItem* item)
 {
     QModelIndex index  = this->upPage->indexFromItem(item);
-//    qDebug()<<"cancelItemindex:"<<index.row();
-//    qDebug()<<"count:"<<this->upPage->count();
     /*使剩下行上移*/
     this->upPage->takeItem(this->upPage->indexFromItem(item).row());
     if(this->upPage->count()-1 > index.row()){
@@ -78,6 +77,7 @@ void up_downPage::cancelTask(QListWidgetItem* item)
             this->upPage->insertItem(i-1,this->upPage->item(i));
 //            qDebug()<<"flag2";
             this->upPage->removeItemWidget(this->upPage->item(i));
+//            this->upPage->takeItem(i);
         }
 
     }

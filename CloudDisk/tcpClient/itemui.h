@@ -10,6 +10,7 @@
 #include <QProgressBar>
 #include <QListWidgetItem>
 #include "task.h"
+#include <downLoadTask.h>
 
 class ItemUI : public QWidget
 {
@@ -35,11 +36,16 @@ private:
     QVBoxLayout* mainVLayout;
     int curFileSize;
     QWaitCondition* WaitCondition;
+    Task* task = NULL;
+    downLoadTask* downloadTask = NULL;
+    QThread* workThread;
 private slots:
    void switchBtnText(void);  //用于切换按钮文本 开始-停止
    void cancelTask(void);  //用于取消任务
    void taskFin(void);
    void createDownloadTask(QString ServerfilePath,QString absolutedFileName);
+   void TaskTerminate();
+   void delUnaccomplishedFIle(QString serFilePath);
 signals:
     void setItem(QListWidgetItem*,QWidget*);   //发往up_down页面用于将ui插入ListWidget
     void uploadTaskStart(void); //发送任务开始信号

@@ -46,7 +46,7 @@ public:
 
     void handleDelDir(protocol::PDU* pdu);
 
-    void handleDelFile(protocol::PDU* pdu);
+    void handleDelFile(protocol::PDU* pdu,int mode);
 
     void handleReNameFile(protocol::PDU* pdu);
 

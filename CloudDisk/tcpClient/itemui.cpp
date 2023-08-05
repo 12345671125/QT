@@ -1,7 +1,7 @@
 #include "itemui.h"
 #include "opewidget.h"
 #include "clientwin.h"
-#include <downLoadTask.h>
+
 
 ItemUI::ItemUI(QString FileName,int width,int height,QWidget *parent)
     : QWidget{parent}
@@ -51,22 +51,24 @@ void ItemUI::createTask(QString curPath,QString absolutedPath)   //创建任务�
 {
     qDebug()<<"main ThreadID:"<<QThread::currentThreadId();
     Task* task = new Task(NULL); //创建任务对象
+    this->task = task;
     QThread* workThread = new QThread(this); //创建工作线程  --使用线程池可以减少创建销毁线程的开销
-
+    this->workThread = workThread;
     /*以下为信号和槽函数的连接*/
 
 //    QObject::connect(this,SIGNAL(uploadTaskStart()),task,SLOT(taskStart()));
     QObject::connect(this,SIGNAL(uploadTaskThreadinit(QString,QString,QString,quint16,QWaitCondition*)),task,SLOT(taskThreadinit(QString,QString,QString,quint16,QWaitCondition*)));
 //    QObject::connect(this,SIGNAL(uploadTaskStart()),task,SLOT(taskStart()));
-    QObject::connect(task,SIGNAL(updatePgBGUI(int)),this,SLOT(updatePgBGUI(int))); //单例模式在成员函数中重复信号槽的连接会导致信号的重复发送
-    QObject::connect(task,SIGNAL(taskFin()),OpeWidget::getinstance().getfilePage(),SLOT(uploadFileEnd()));
-    QObject::connect(task,SIGNAL(finished()),workThread,SLOT(quit()));
-    QObject::connect(task,SIGNAL(taskFin()),this,SLOT(taskFin()));
-    QObject::connect(stopBtn,SIGNAL(clicked()),task,SLOT(pauseTask()));
-    QObject::connect(cancelBtn,SIGNAL(clicked()),task,SLOT(cancelTask()));
+    QObject::connect(this->task,SIGNAL(updatePgBGUI(int)),this,SLOT(updatePgBGUI(int))); //单例模式在成员函数中重复信号槽的连接会导致信号的重复发送
+    QObject::connect(this->task,SIGNAL(taskFin()),OpeWidget::getinstance().getfilePage(),SLOT(uploadFileEnd()));
+    QObject::connect(this->task,SIGNAL(finished()),workThread,SLOT(quit()));
+    QObject::connect(this->task,SIGNAL(taskFin()),this,SLOT(taskFin()));
+    QObject::connect(this->task,SIGNAL(taskTerminate()),this,SLOT(TaskTerminate()));
+    QObject::connect(stopBtn,SIGNAL(clicked()),this->task,SLOT(pauseTask()));
+    QObject::connect(cancelBtn,SIGNAL(clicked()),this->task,SLOT(cancelTask()));
     QObject::connect(cancelBtn,SIGNAL(clicked()),this,SLOT(cancelTask()));
     QObject::connect(stopBtn,SIGNAL(clicked()),this,SLOT(switchBtnText()));
-
+    QObject::connect(task,SIGNAL(delUnaccomplishedFile(QString)),this,SLOT(delUnaccomplishedFIle(QString)));
     task->moveToThread(workThread);  //将task对象移入workThread线程中
     QString address = clientWin::getInstance().getServerIp();  //获取服务器地址
     quint16 port = clientWin::getInstance().getServerPort();  //获取服务器ip
@@ -108,18 +110,19 @@ void ItemUI::createDownloadTask(QString ServerfilePath,QString absolutedFileName
 {
     qDebug()<<"main ThreadID:"<<QThread::currentThreadId();
     downLoadTask *task = new downLoadTask(NULL); //创建任务对象
+    this->downloadTask = task;
     QThread* workThread = new QThread(this); //创建工作线程  --使用线程池可以减少创建销毁线程的开销
-
+    this->workThread = workThread;
     /*以下为信号和槽函数的连接*/
 
 //    QObject::connect(this,SIGNAL(downloadTaskStart()),task,SLOT(taskStart()));
     QObject::connect(this,SIGNAL(downloadTaskThreadinit(QString,QString,QString,quint16,QWaitCondition*)),task,SLOT(taskThreadinit(QString,QString,QString,quint16,QWaitCondition*)));
-    QObject::connect(task,SIGNAL(updatePgBGUI(int)),this,SLOT(updatePgBGUI(int))); //单例模式在成员函数中重复信号槽的连接会导致信号的重复发送
-    QObject::connect(task,SIGNAL(taskFin()),OpeWidget::getinstance().getfilePage(),SLOT(uploadFileEnd()));
-    QObject::connect(task,SIGNAL(finished()),workThread,SLOT(quit()));
-    QObject::connect(task,SIGNAL(taskFin()),this,SLOT(taskFin()));
-    QObject::connect(stopBtn,SIGNAL(clicked()),task,SLOT(pauseTask()));
-    QObject::connect(cancelBtn,SIGNAL(clicked()),task,SLOT(cancelTask()));
+    QObject::connect(this->downloadTask,SIGNAL(updatePgBGUI(int)),this,SLOT(updatePgBGUI(int))); //单例模式在成员函数中重复信号槽的连接会导致信号的重复发送
+    QObject::connect(this->downloadTask,SIGNAL(taskFin()),OpeWidget::getinstance().getfilePage(),SLOT(uploadFileEnd()));
+    QObject::connect(this->downloadTask,SIGNAL(finished()),workThread,SLOT(quit()));
+    QObject::connect(this->downloadTask,SIGNAL(taskFin()),this,SLOT(taskFin()));
+    QObject::connect(stopBtn,SIGNAL(clicked()),this->downloadTask,SLOT(pauseTask()));
+    QObject::connect(cancelBtn,SIGNAL(clicked()),this->downloadTask,SLOT(cancelTask()));
     QObject::connect(cancelBtn,SIGNAL(clicked()),this,SLOT(cancelTask()));
     QObject::connect(stopBtn,SIGNAL(clicked()),this,SLOT(switchBtnText()));
 
@@ -129,7 +132,23 @@ void ItemUI::createDownloadTask(QString ServerfilePath,QString absolutedFileName
     workThread->start(); //启动线程
     qDebug()<<"void ItemUI::createDownloadTask(QString absolutedFileName)";
     emit downloadTaskThreadinit(ServerfilePath,absolutedFileName,address,port,this->WaitCondition); //发送任务初始化信号,使任务对象初始化
-//    emit downloadTaskStart(); //发送开始任务信号
+    //    emit downloadTaskStart(); //发送开始任务信号
+}
+
+void ItemUI::TaskTerminate()
+{
+    QMessageBox::information(nullptr,"文件下载","文件已存在，上传终止");
+    emit taskFin();
+}
+
+void ItemUI::delUnaccomplishedFIle(QString serFilePath)
+{
+    protocol::PDU* pdu = protocol::createPDU(serFilePath.length());
+    pdu->uiMsgType = protocol::ENUM_MSG_TYPE_CANCEL_UPLOAD_FILE_REQUEST;
+    memcpy(pdu->caMsg,serFilePath.toStdString().c_str(),serFilePath.length());
+    clientWin::getInstance().getTcpSocket().write((char*)pdu,pdu->PDULen);
+    free(pdu);
+    pdu = nullptr;
 }
 
 

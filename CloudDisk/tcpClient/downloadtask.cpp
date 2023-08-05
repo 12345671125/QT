@@ -6,7 +6,6 @@ downLoadTask::downLoadTask(QObject *parent)
     /*ui初始化*/
     this->absolutedFileName = QString();
     this->absolutedFileName.clear();
-//    QObject::connect(&this->clientSocket,SIGNAL(readyRead()),this,SLOT(recvMsg()));
 
 }
 
@@ -105,7 +104,8 @@ void downLoadTask::getFileData()
         memcpy(str,pdu->caData,64);
         QString strPercent = str;
         emit updatePgBGUI(strPercent.toDouble());
-            file->write((char*)pdu->caMsg,pdu->uiMsgLen);
+        file->write((char*)pdu->caMsg,pdu->uiMsgLen);
+        this->clientSocket->flush();
         qDebug()<<pdu->uiMsgLen;
     }else if(pdu->uiMsgType == protocol::ENUM_MSG_TYPE_DOWNLOADFIN_FILE_RESPOND){
             qDebug()<<"ENUM_MSG_TYPE_DOWNLOADFIN_FILE_RESPOND";

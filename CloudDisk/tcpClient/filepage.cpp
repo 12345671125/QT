@@ -94,6 +94,7 @@ filePage &filePage::getInstance()
 
 void filePage::emitSignal()
 {
+    qDebug()<<"emitSignal";
     emit createFileItem(clientWin::getInstance().curPath(),this->absolutedFilePath);
 }
 
@@ -115,6 +116,8 @@ void filePage::emitSignal()
 
 void filePage::uploadFile()
 {
+
+    qDebug()<<"uploadFile";
     this->fileName = QFileDialog::getOpenFileName(this,"选择文件");
     if(fileName.isEmpty()){
         return;
@@ -133,6 +136,7 @@ void filePage::uploadFile()
     qDebug()<<this->absolutedFilePath;
 //    file->close();
     delete file;
+    file = nullptr;
     this->emitSignal();
 }
 
