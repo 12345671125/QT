@@ -396,6 +396,8 @@ void filePage::downLoadFile()
     if(savedPath.isEmpty()){
         return;
     }
+    up_downPage::getInstance().setPage(1);
+    up_downPage::getInstance().show();
     QString ServerfilePath = clientWin::getInstance().curPath() + '/' + defaultFileName;
     this->absolutedDonwloadFileName = savedPath;
     emit createDownLoadFileItem(ServerfilePath,this->absolutedDonwloadFileName);

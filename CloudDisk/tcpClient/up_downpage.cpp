@@ -68,21 +68,41 @@ void up_downPage::createDownloadFileItem(QString ServerfilePath,QString absolute
 }
 void up_downPage::cancelTask(QListWidgetItem* item)
 {
-    QModelIndex index  = this->upPage->indexFromItem(item);
-    /*使剩下行上移*/
-    this->upPage->takeItem(this->upPage->indexFromItem(item).row());
-    if(this->upPage->count()-1 > index.row()){
-        for(int i = index.row()+1;i<this->upPage->count();i++){
-//            qDebug()<<"flag1";
-            this->upPage->insertItem(i-1,this->upPage->item(i));
-//            qDebug()<<"flag2";
-            this->upPage->removeItemWidget(this->upPage->item(i));
-//            this->upPage->takeItem(i);
-        }
 
+    if(this->upPage->indexFromItem(item).isValid()){
+        QModelIndex index  = this->upPage->indexFromItem(item);
+        /*使剩下行上移*/
+        this->upPage->takeItem(this->upPage->indexFromItem(item).row());
+        if(this->upPage->count()-1 > index.row()){
+            for(int i = index.row()+1;i<this->upPage->count();i++){
+                //            qDebug()<<"flag1";
+                this->upPage->insertItem(i-1,this->upPage->item(i));
+                //            qDebug()<<"flag2";
+                this->upPage->removeItemWidget(this->upPage->item(i));
+                //            this->upPage->takeItem(i);
+            }
+
+        }
+        this->upPage->viewport()->update();
+        this->upPage->update();
+    }else{
+        QModelIndex index  = this->downPage->indexFromItem(item);
+        /*使剩下行上移*/
+        this->downPage->takeItem(this->downPage->indexFromItem(item).row());
+        if(this->downPage->count()-1 > index.row()){
+            for(int i = index.row()+1;i<this->downPage->count();i++){
+                //            qDebug()<<"flag1";
+                this->downPage->insertItem(i-1,this->downPage->item(i));
+                //            qDebug()<<"flag2";
+                this->downPage->removeItemWidget(this->downPage->item(i));
+                //            this->upPage->takeItem(i);
+            }
+
+        }
+        this->downPage->viewport()->update();
+        this->downPage->update();
     }
-    this->upPage->viewport()->update();
-    this->upPage->update();
+
 
 }
 
